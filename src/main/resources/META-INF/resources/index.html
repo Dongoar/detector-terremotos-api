@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sismógrafo Alerta - Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body class="bg-gray-950 text-gray-100 font-sans min-h-screen flex flex-col">
+
+<header class="bg-gray-900 border-b border-gray-800 p-4 sticky top-0 z-50 shadow-md">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <h1 class="text-xl font-bold text-red-500 flex items-center gap-2">
+            🚨 Sismógrafo Alerta Centro
+        </h1>
+        <div class="flex items-center gap-4">
+            <a href="/estadisticas.html" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded border border-gray-700 transition-all">
+                📊 Ver Estadísticas
+            </a>
+            <span class="bg-green-500/10 text-green-400 text-xs px-2.5 py-1 rounded-full font-medium border border-green-500/20 animate-pulse">
+                • Monitoreo Activo
+            </span>
+        </div>
+    </div>
+</header>
+
+<main class="flex-1 max-w-7xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <div class="lg:col-span-2 bg-gray-900 rounded-xl border border-gray-800 shadow-xl overflow-hidden flex flex-col min-h-[450px]">
+        <div class="p-4 border-b border-gray-800 flex justify-between items-center">
+            <h2 class="font-semibold text-gray-200">Geolocalización de Eventos Recientes</h2>
+            <span class="text-xs text-gray-400">Región Global</span>
+        </div>
+        <div id="map" class="flex-1 w-full h-full bg-gray-800"></div>
+    </div>
+
+    <div class="bg-gray-900 rounded-xl border border-gray-800 shadow-xl flex flex-col h-[600px] lg:h-auto">
+
+        <div class="p-4 border-b border-gray-800 flex justify-between items-center gap-2">
+            <h2 class="font-semibold text-gray-200 flex-1">Historial de Registros</h2>
+            <button onclick="limpiarPantalla()" class="text-[11px] bg-red-950/40 hover:bg-red-900/40 text-red-400 px-2 py-1 rounded border border-red-500/20 active:scale-95 transition-all cursor-pointer">
+                🗑️ Limpiar DB
+            </button>
+            <span id="contador" class="text-xs bg-gray-800 text-gray-300 px-2 py-1 rounded">0 sismos</span>
+        </div>
+
+        <div class="p-4 bg-gray-900/50 border-b border-gray-800 flex gap-2 items-center">
+            <div class="flex-1">
+                <select id="filtro-pais" onchange="filtrarYRenderizar()" class="w-full bg-gray-800 text-gray-200 text-xs rounded border border-gray-700 p-2 focus:outline-none focus:border-red-500 cursor-pointer">
+                    <option value="todos">🌍 Ver Todos los Países</option>
+                    <option value="peru">🇵🇪 Perú</option>
+                    <option value="chile">🇨🇱 Chile</option>
+                    <option value="otros">🏳️ Otros Países</option>
+                </select>
+            </div>
+            <button onclick="descargarCSV()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs px-3 py-2 rounded shadow transition-all active:scale-95 flex items-center gap-1 cursor-pointer" title="Descargar datos actuales en formato Excel / CSV">
+                📥 Exportar
+            </button>
+        </div>
+
+        <div id="lista-sismos" class="p-4 overflow-y-auto flex-1 space-y-3 custom-scrollbar">
+            <div class="text-center text-gray-500 text-sm py-8">Cargando datos del sismógrafo...</div>
+        </div>
+    </div>
+</main>
+
+<script>
+    // Configuración inteligente: detecta si estás en local o en la nube
+    const IS_PROD = window.location.hostname !== "localhost";
+    const BACKEND_URL = IS_PROD ? "https://TU-URL-DE-CLOUD-RUN.a.run.app" : "http://localhost:8083";
+
+    const map = L.map('map').setView([-12.0463, -77.0427], 5);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap &copy; CARTO'
+    }).addTo(map);
+
+    let marcadores = {};
+    const sonidoAlarma = new Audio('/alarma.mp3');
+    let timeoutAudio = null;
+    let todosLosSismos = [];
+
+    function obtenerCategoriaPais(lugar) {
+        if (!lugar) return "otros";
+        const lugarLower = lugar.toLowerCase();
+        if (lugarLower.includes("peru")) return "peru";
+        if (lugarLower.includes("chile")) return "chile";
+        return "otros";
+    }
+
+    function reproducirAlertaDinamica(esCritico) {
+        if (timeoutAudio) clearTimeout(timeoutAudio);
+        sonidoAlarma.pause();
+        sonidoAlarma.currentTime = 0;
+        sonidoAlarma.play().catch(err => console.warn("Audio bloqueado por navegador:", err));
+        timeoutAudio = setTimeout(() => sonidoAlarma.pause(), esCritico ? 40000 : 20000);
+    }
+
+    function filtrarYRenderizar() {
+        const filtro = document.getElementById('filtro-pais').value;
+        const lista = document.getElementById('lista-sismos');
+
+        // Limpiar interfaz
+        lista.innerHTML = '';
+        Object.values(marcadores).forEach(m => map.removeLayer(m));
+        marcadores = {};
+
+        const sismosFiltrados = todosLosSismos.filter(s => filtro === "todos" || obtenerCategoriaPais(s.lugar) === filtro);
+        document.getElementById('contador').innerText = `${sismosFiltrados.length} sismos`;
+
+        sismosFiltrados.forEach(sismo => {
+            const tarjeta = document.createElement('div');
+            tarjeta.className = `relative p-3.5 mb-2 rounded-lg border cursor-pointer ${sismo.alertaCritica ? 'bg-red-500/10 border-red-500/50' : 'bg-gray-800/40 border-gray-800'}`;
+            tarjeta.innerHTML = `
+                <div class="flex justify-between items-start mb-1">
+                    <span class="text-sm font-bold ${sismo.alertaCritica ? 'text-red-400' : 'text-amber-400'}">M ${sismo.magnitud.toFixed(1)}</span>
+                    <span class="text-[10px] text-gray-500">${new Date(sismo.fechaHora).toLocaleString()}</span>
+                </div>
+                <p class="text-xs text-gray-300 pr-6">${sismo.lugar}</p>
+                <button onclick="eliminarSismoIndividual(${sismo.id}, event)" class="absolute top-2 right-2 text-red-500 hover:text-red-300 text-lg">×</button>
+            `;
+            tarjeta.onclick = () => map.setView([sismo.latitud, sismo.longitud], 7);
+            lista.appendChild(tarjeta);
+
+            const marker = L.circleMarker([sismo.latitud, sismo.longitud], {
+                radius: sismo.alertaCritica ? 10 : 6,
+                fillColor: sismo.alertaCritica ? '#ef4444' : '#f59e0b',
+                color: '#fff', weight: 1, fillOpacity: 0.8
+            }).addTo(map);
+            marcadores[sismo.id] = marker;
+        });
+    }
+
+    async function cargarSismos() {
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/sismos`);
+            todosLosSismos = response.ok ? await response.json() : [];
+            filtrarYRenderizar();
+        } catch (error) { console.error("Error al cargar historial:", error); }
+    }
+
+    async function eliminarSismoIndividual(id, evento) {
+        evento.stopPropagation();
+        if (confirm("¿Eliminar este registro?")) {
+            await fetch(`${BACKEND_URL}/api/sismos/${id}`, { method: 'DELETE' });
+            cargarSismos();
+        }
+    }
+
+    // Inicialización del Stream
+    cargarSismos();
+
+    const connectSSE = () => {
+        const eventSource = new EventSource(`${BACKEND_URL}/api/sismos/en-vivo`);
+
+        eventSource.onmessage = (event) => {
+            const nuevoSismo = JSON.parse(event.data);
+            todosLosSismos.unshift(nuevoSismo);
+            filtrarYRenderizar();
+            reproducirAlertaDinamica(nuevoSismo.alertaCritica);
+        };
+
+        eventSource.onerror = () => {
+            console.warn("Conexión perdida, reconectando...");
+            eventSource.close();
+            setTimeout(connectSSE, 5000); // Reconecta cada 5 segundos
+        };
+    };
+
+    connectSSE();
+
+    // Desbloqueo de audio
+    document.addEventListener('click', () => sonidoAlarma.load(), { once: true });
+</script>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #374151; }
+</style>
+</body>
+</html>

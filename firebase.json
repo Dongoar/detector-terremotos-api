@@ -1,0 +1,10 @@
+{
+  "hosting": {
+    "public": "src/main/resources/META-INF/resources",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}

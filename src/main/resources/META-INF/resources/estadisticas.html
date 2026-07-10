@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sismógrafo Alerta - Estadísticas y Análisis</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-950 text-gray-100 font-sans min-h-screen flex flex-col">
+
+<header class="bg-gray-900 border-b border-gray-800 p-4 sticky top-0 z-50 shadow-md">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <h1 class="text-xl font-bold text-amber-500 flex items-center gap-2">
+                📊 Panel de Análisis Sismológico
+            </h1>
+            <nav class="hidden md:flex gap-2">
+                <a href="/index.html" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded border border-gray-700 transition-all">
+                    ⬅️ Volver al Mapa en Vivo
+                </a>
+            </nav>
+        </div>
+        <button onclick="cargarDatosEstadisticos()" class="bg-amber-600 hover:bg-amber-500 text-white font-medium text-xs px-3 py-2 rounded shadow transition-all active:scale-95 cursor-pointer">
+            🔄 Actualizar Datos
+        </button>
+    </div>
+</header>
+
+<main class="flex-1 max-w-7xl w-full mx-auto p-4 space-y-6">
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-gray-900 rounded-xl border border-gray-800 p-5 shadow-xl flex items-center justify-between">
+            <div>
+                <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Total Eventos Registrados</p>
+                <h3 id="kpi-total" class="text-3xl font-bold text-gray-100 mt-1">0</h3>
+            </div>
+            <div class="p-3 bg-blue-500/10 text-blue-400 rounded-lg border border-blue-500/20 text-2xl">🌐</div>
+        </div>
+
+        <div class="bg-gray-900 rounded-xl border border-gray-800 p-5 shadow-xl flex items-center justify-between">
+            <div>
+                <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Magnitud Máxima</p>
+                <h3 id="kpi-maxima" class="text-3xl font-bold text-red-400 mt-1">M 0.0</h3>
+                <p id="kpi-maxima-lugar" class="text-[11px] text-gray-500 mt-1 truncate max-w-[200px]">Ninguno</p>
+            </div>
+            <div class="p-3 bg-red-500/10 text-red-400 rounded-lg border border-red-500/20 text-2xl">💥</div>
+        </div>
+
+        <div class="bg-gray-900 rounded-xl border border-gray-800 p-5 shadow-xl flex items-center justify-between">
+            <div>
+                <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Alertas Críticas (≥ 5.5)</p>
+                <h3 id="kpi-criticos" class="text-3xl font-bold text-amber-400 mt-1">0%</h3>
+                <p id="kpi-criticos-conteo" class="text-[11px] text-gray-500 mt-1">0 de 0 sismos</p>
+            </div>
+            <div class="p-3 bg-amber-500/10 text-amber-400 rounded-lg border border-amber-500/20 text-2xl">🚨</div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <div class="bg-gray-900 rounded-xl border border-gray-800 p-4 shadow-xl flex flex-col h-[350px]">
+            <h2 class="font-semibold text-gray-200 text-sm mb-4">📈 Tendencia de Magnitudes en el Tiempo</h2>
+            <div class="flex-1 relative min-h-0 w-full">
+                <canvas id="chartLineas"></canvas>
+            </div>
+        </div>
+
+        <div class="bg-gray-900 rounded-xl border border-gray-800 p-4 shadow-xl flex flex-col h-[350px]">
+            <h2 class="font-semibold text-gray-200 text-sm mb-4">📊 Volumen de Actividad por Región</h2>
+            <div class="flex-1 relative min-h-0 w-full">
+                <canvas id="chartBarras"></canvas>
+            </div>
+        </div>
+
+        <div class="lg:col-span-2 bg-gray-900 rounded-xl border border-gray-800 p-4 shadow-xl flex flex-col h-[320px] items-center">
+            <h2 class="font-semibold text-gray-200 text-sm mb-2 w-full text-left">🍕 Distribución de Severidad (Moderados vs Críticos)</h2>
+            <div class="flex-1 relative min-h-0 h-full w-[260px]">
+                <canvas id="chartPastel"></canvas>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<script>
+    // 🌐 URL de tu API en Quarkus (Apunta a localhost en desarrollo)
+    const BACKEND_URL = "http://localhost:8083";
+
+    let instanciaLineas = null;
+    let instanciaBarras = null;
+    let instanciaPastel = null;
+
+    function obtenerCategoriaPais(lugar) {
+        if (!lugar) return "Otros Países 🏳️";
+        const lugarLower = lugar.toLowerCase();
+        if (lugarLower.includes("peru")) return "Perú 🇵🇪";
+        if (lugarLower.includes("chile")) return "Chile 🇨🇱";
+        return "Otros Países 🏳️";
+    }
+
+    async function cargarDatosEstadisticos() {
+        try {
+            // 🛠️ Modificado para usar la URL absoluta
+            const response = await fetch(`${BACKEND_URL}/api/sismos`);
+
+            if (response.status === 204) {
+                console.warn("La base de datos está vacía.");
+                resetearPantalla();
+                return;
+            }
+
+            const sismos = await response.json();
+
+            if (!sismos || sismos.length === 0) {
+                console.warn("No se encontraron datos de sismos.");
+                resetearPantalla();
+                return;
+            }
+
+            // --- PROCESAMIENTO ---
+            const totalSismos = sismos.length;
+            let sismoMaximo = sismos[0];
+            let cantidadCriticos = 0;
+
+            const conteoPaises = { "Perú 🇵🇪": 0, "Chile 🇨🇱": 0, "Otros Países 🏳️": 0 };
+
+            const sismosOrdenadosCrono = [...sismos].reverse();
+            const etiquetasTiempo = [];
+            const valoresMagnitud = [];
+
+            sismosOrdenadosCrono.forEach(sismo => {
+                if (sismo.magnitud > sismoMaximo.magnitud) {
+                    sismoMaximo = sismo;
+                }
+                if (sismo.alertaCritica) {
+                    cantidadCriticos++;
+                }
+                const pais = obtenerCategoriaPais(sismo.lugar);
+                conteoPaises[pais] = (conteoPaises[pais] || 0) + 1;
+
+                const fecha = new Date(sismo.fechaHora);
+                etiquetasTiempo.push(fecha.toLocaleDateString() + " " + fecha.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
+                valoresMagnitud.push(sismo.magnitud);
+            });
+
+            // --- RENDERIZAR KPIs ---
+            document.getElementById('kpi-total').innerText = totalSismos;
+            document.getElementById('kpi-maxima').innerText = `M ${sismoMaximo.magnitud.toFixed(1)}`;
+            document.getElementById('kpi-maxima-lugar').innerText = sismoMaximo.lugar || "Desconocido";
+
+            const porcentajeCriticos = totalSismos > 0 ? ((cantidadCriticos / totalSismos) * 100).toFixed(1) : "0.0";
+            document.getElementById('kpi-criticos').innerText = `${porcentajeCriticos}%`;
+            document.getElementById('kpi-criticos-conteo').innerText = `${cantidadCriticos} de ${totalSismos} eventos`;
+
+            // --- RENDERIZAR GRÁFICOS ---
+            const opcionesComunesGrid = {
+                scales: {
+                    x: { grid: { color: '#1f2937' }, ticks: { color: '#9ca3af', font: { size: 10 } } },
+                    y: { grid: { color: '#1f2937' }, ticks: { color: '#9ca3af' } }
+                },
+                plugins: { legend: { display: false } },
+                responsive: true,
+                maintainAspectRatio: false
+            };
+
+            // 1. Gráfico de Líneas
+            if (instanciaLineas) instanciaLineas.destroy();
+            instanciaLineas = new Chart(document.getElementById('chartLineas'), {
+                type: 'line',
+                data: {
+                    labels: etiquetasTiempo,
+                    datasets: [{
+                        label: 'Magnitud',
+                        data: valoresMagnitud,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.2,
+                        fill: true,
+                        pointBackgroundColor: '#60a5fa'
+                    }]
+                },
+                options: opcionesComunesGrid
+            });
+
+            // 2. Gráfico de Barras
+            if (instanciaBarras) instanciaBarras.destroy();
+            instanciaBarras = new Chart(document.getElementById('chartBarras'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(conteoPaises),
+                    datasets: [{
+                        data: Object.values(conteoPaises),
+                        backgroundColor: ['#ef4444', '#f59e0b', '#10b981'],
+                        borderRadius: 4
+                    }]
+                },
+                options: opcionesComunesGrid
+            });
+
+            // 3. Gráfico de Pastel
+            if (instanciaPastel) instanciaPastel.destroy();
+            instanciaPastel = new Chart(document.getElementById('chartPastel'), {
+                type: 'pie',
+                data: {
+                    labels: ['Moderados (< 5.5)', 'Críticos (≥ 5.5)'],
+                    datasets: [{
+                        data: [totalSismos - cantidadCriticos, cantidadCriticos],
+                        backgroundColor: ['#10b981', '#ef4444'],
+                        borderWidth: 2,
+                        borderColor: '#111827'
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#e5e7eb', font: { size: 11 } }
+                        }
+                    },
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+        } catch (error) {
+            console.error("Error cargando los datos analíticos:", error);
+        }
+    }
+
+    function resetearPantalla() {
+        document.getElementById('kpi-total').innerText = "0";
+        document.getElementById('kpi-maxima').innerText = "M 0.0";
+        document.getElementById('kpi-maxima-lugar').innerText = "Ninguno";
+        document.getElementById('kpi-criticos').innerText = "0%";
+        document.getElementById('kpi-criticos-conteo').innerText = "0 de 0 sismos";
+
+        if (instanciaLineas) instanciaLineas.destroy();
+        if (instanciaBarras) instanciaBarras.destroy();
+        if (instanciaPastel) instanciaPastel.destroy();
+    }
+
+    window.onload = cargarDatosEstadisticos;
+</script>
+</body>
+</html>
