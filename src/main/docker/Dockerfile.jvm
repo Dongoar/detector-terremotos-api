@@ -2,7 +2,8 @@ FROM maven:3.8.5-openjdk-17 AS build
 COPY . /app
 WORKDIR /app
 RUN ls -la /app
-RUN mvn clean package -DskipTests
+# Cambia esta línea:
+RUN mvn clean package -DskipTests -Dquarkus.container-image.build=false -Dquarkus.test.enabled=false
 
 FROM registry.access.redhat.com/ubi9/openjdk-17-runtime:1.24
 COPY --from=build /app/target/quarkus-app/lib/ /deployments/lib/
