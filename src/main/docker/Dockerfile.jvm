@@ -1,16 +1,14 @@
 # Etapa 1: Construcción
 FROM maven:3.8.5-openjdk-17 AS build
-# Copiamos absolutamente todo el contenido de tu proyecto
 COPY . /app
-WORKDIR /app
-# Ejecutamos el build desde la raíz
+WORKDIR /app/detector-terremotos-api
 RUN mvn clean package -DskipTests
 
 # Etapa 2: Ejecución
 FROM registry.access.redhat.com/ubi9/openjdk-17-runtime:1.24
-COPY --from=build /app/target/quarkus-app/lib/ /deployments/lib/
-COPY --from=build /app/target/quarkus-app/*.jar /deployments/
-COPY --from=build /app/target/quarkus-app/app/ /deployments/app/
-COPY --from=build /app/target/quarkus-app/quarkus/ /deployments/quarkus/
+COPY --from=build /app/detector-terremotos-api/target/quarkus-app/lib/ /deployments/lib/
+COPY --from=build /app/detector-terremotos-api/target/quarkus-app/*.jar /deployments/
+COPY --from=build /app/detector-terremotos-api/target/quarkus-app/app/ /deployments/app/
+COPY --from=build /app/detector-terremotos-api/target/quarkus-app/quarkus/ /deployments/quarkus/
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "/deployments/quarkus-run.jar"]
