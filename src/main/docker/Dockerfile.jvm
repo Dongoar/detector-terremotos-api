@@ -1,14 +1,20 @@
 # Etapa 1: Construcción
 FROM maven:3.8.5-openjdk-17 AS build
 COPY . /app
-WORKDIR /app/detector-terremotos-api
-RUN mvn clean package -DskipTests
+WORKDIR /app
+# Este comando listará los archivos para que veamos dónde está el pom.xml en los logs
+RUN ls -R /app
+# Compila buscando el pom.xml en cualquier subcarpeta
+RUN find . -name "pom.xml" -exec dirname {} \; > /tmp/pom_dir.txt && \
+    cd $(cat /tmp/pom_dir.txt) && \
+    mvn clean package -DskipTests
 
 # Etapa 2: Ejecución
 FROM registry.access.redhat.com/ubi9/openjdk-17-runtime:1.24
-COPY --from=build /app/detector-terremotos-api/target/quarkus-app/lib/ /deployments/lib/
-COPY --from=build /app/detector-terremotos-api/target/quarkus-app/*.jar /deployments/
-COPY --from=build /app/detector-terremotos-api/target/quarkus-app/app/ /deployments/app/
-COPY --from=build /app/detector-terremotos-api/target/quarkus-app/quarkus/ /deployments/quarkus/
+# Esta línea busca el archivo jar resultante sin importar la subcarpeta
+COPY --from=build /app/**/target/quarkus-app/lib/ /deployments/lib/
+COPY --from=build /app/**/target/quarkus-app/*.jar /deployments/
+COPY --from=build /app/**/target/quarkus-app/app/ /deployments/app/
+COPY --from=build /app/**/target/quarkus-app/quarkus/ /deployments/quarkus/
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "/deployments/quarkus-run.jar"]
