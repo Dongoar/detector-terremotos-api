@@ -1,9 +1,9 @@
 # Etapa 1: Construcción
 FROM maven:3.8.5-openjdk-17 AS build
-# Copiamos solo el pom.xml y la carpeta src para mayor seguridad
-COPY pom.xml /app/
-COPY src /app/src
+# Copiamos absolutamente todo el contenido de tu proyecto
+COPY . /app
 WORKDIR /app
+# Ejecutamos el build desde la raíz
 RUN mvn clean package -DskipTests
 
 # Etapa 2: Ejecución
