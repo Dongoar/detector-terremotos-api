@@ -2,16 +2,14 @@
 FROM maven:3.8.5-openjdk-17 AS build
 COPY . /app
 WORKDIR /app
-# Este comando listará los archivos para que veamos dónde está el pom.xml en los logs
+# Listamos todo para ver dónde está el pom.xml
 RUN ls -R /app
-# Compila buscando el pom.xml en cualquier subcarpeta
-RUN find . -name "pom.xml" -exec dirname {} \; > /tmp/pom_dir.txt && \
-    cd $(cat /tmp/pom_dir.txt) && \
-    mvn clean package -DskipTests
+# Intentamos compilar buscando el pom.xml
+RUN mvn -f $(find . -name "pom.xml" | head -n 1) clean package -DskipTests
 
 # Etapa 2: Ejecución
 FROM registry.access.redhat.com/ubi9/openjdk-17-runtime:1.24
-# Esta línea busca el archivo jar resultante sin importar la subcarpeta
+# Copiamos usando un patrón flexible
 COPY --from=build /app/**/target/quarkus-app/lib/ /deployments/lib/
 COPY --from=build /app/**/target/quarkus-app/*.jar /deployments/
 COPY --from=build /app/**/target/quarkus-app/app/ /deployments/app/
