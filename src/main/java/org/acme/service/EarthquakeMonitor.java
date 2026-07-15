@@ -3,6 +3,7 @@ package org.acme.service;
 import io.quarkus.scheduler.Scheduled;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -12,11 +13,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.acme.model.Sismo;
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.hibernate.reactive.panache.common.WithSession;
-import org.acme.service.SismoEventBus; // <--- ESTO ES LO QUE TE FALTA
+import org.acme.service.SismoEventBus;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -26,6 +28,7 @@ public class EarthquakeMonitor {
 
     private static final Logger LOGGER = Logger.getLogger(EarthquakeMonitor.class.getName());
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
     @Inject
     @RestClient
@@ -35,7 +38,6 @@ public class EarthquakeMonitor {
     @RestClient
     TelegramClient telegramClient;
 
-    // Inyectamos el bus de eventos en lugar del recurso para evitar dependencias circulares
     @Inject
     SismoEventBus eventBus;
 
@@ -44,6 +46,15 @@ public class EarthquakeMonitor {
 
     @ConfigProperty(name = "telegram.chat.id")
     String chatId;
+
+    // ✅ Método de inicialización forzada en Cloud Run
+    @PostConstruct
+    public void init() {
+        LOGGER.info("🚀 EarthquakeMonitor iniciado correctamente");
+        LOGGER.info("⏰ Scheduler configurado para ejecutarse cada 30 segundos");
+        LOGGER.info("📡 Conectando a USGS: " +
+                (System.getenv("QUARKUS_PROFILE") != null ? "PRODUCCIÓN" : "DESARROLLO"));
+    }
 
     @WithSession
     @Scheduled(every = "30s")
@@ -94,7 +105,9 @@ public class EarthquakeMonitor {
                         sismo.latitud = latitud;
                         sismo.longitud = longitud;
                         sismo.alertaCritica = mag >= 5.5;
-                        sismosFiltrados.add(sismo);
+                        sismo.usuarioId = "sistema";
+
+                        sismosFiltrados.add(sismo); // ✅ CORREGIDO
                     }
                 }
             }
@@ -114,22 +127,40 @@ public class EarthquakeMonitor {
     private Uni<Void> procesarSismoIndividual(Sismo sismo) {
         return Sismo.find("usgsId", sismo.usgsId).firstResult()
                 .onItem().transformToUni(existing -> {
-                    if (existing != null) return Uni.createFrom().voidItem();
+                    if (existing != null) {
+                        LOGGER.info("⏭️ Sismo duplicado ignorado: " + sismo.usgsId);
+                        return Uni.createFrom().voidItem();
+                    }
 
-                    String mensaje = "🚨 <b>ALERTA SÍSMICA</b> 🚨\n\n" +
-                            "• <b>Magnitud:</b> " + sismo.magnitud + "\n" +
-                            "• <b>Lugar:</b> " + sismo.lugar;
+                    // ✅ Formatear fecha
+                    String fechaFormateada = sismo.fechaHora.format(dateFormatter);
+
+                    // ✅ Construir el mensaje BASE
+                    String mensajeBase = "📊 <b>Magnitud:</b> " + String.format("%.1f", sismo.magnitud) + "\n" +
+                            "📍 <b>Ubicación:</b> " + sismo.lugar + "\n" +
+                            "📅 <b>Fecha y Hora:</b> " + fechaFormateada + "\n" +
+                            "🗺️ <b>Coordenadas:</b>\n" +
+                            "   • Latitud: " + String.format("%.4f", sismo.latitud) + "\n" +
+                            "   • Longitud: " + String.format("%.4f", sismo.longitud) + "\n\n" +
+                            "🔗 <a href='https://www.google.com/maps?q=" + sismo.latitud + "," + sismo.longitud + "'>Ver en Google Maps</a>";
+
+                    // ✅ Construir el mensaje FINAL (con o sin alerta crítica)
+                    final String mensajeFinal = sismo.alertaCritica ?
+                            "🔴🔴 <b>¡ALERTA CRÍTICA!</b> 🔴🔴\n\n🚨 <b>ALERTA SÍSMICA</b> 🚨\n\n" + mensajeBase :
+                            "🚨 <b>ALERTA SÍSMICA</b> 🚨\n\n" + mensajeBase;
 
                     return Panache.withTransaction(sismo::persist)
                             .onItem().invoke(p -> {
-                                // 📢 AQUÍ ES DONDE SE EMITE EL EVENTO HACIA EL FRONTEND
                                 eventBus.emitir(sismo);
-                                LOGGER.info("📢 Sismo emitido al stream en tiempo real: " + sismo.lugar);
+                                LOGGER.info("📢 Sismo emitido al stream: " + sismo.lugar + " (M" + sismo.magnitud + ")");
                             })
                             .onItem().transformToUni(p ->
-                                    telegramClient.enviarAlerta(botToken, chatId, mensaje, "HTML")
+                                    telegramClient.enviarAlerta(botToken, chatId, mensajeFinal, "HTML")
+                                            .onItem().invoke(res -> LOGGER.info("📲 Alerta enviada a Telegram: " + sismo.lugar))
+                                            .onFailure().invoke(err -> LOGGER.warning("⚠️ Error enviando a Telegram: " + err.getMessage()))
+                                            .onFailure().recoverWithItem(() -> null)
                             )
-                            .map(target -> null);
+                            .onItem().transformToUni(result -> Uni.createFrom().voidItem());
                 });
     }
 }

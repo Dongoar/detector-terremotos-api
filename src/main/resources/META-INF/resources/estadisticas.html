@@ -3,89 +3,310 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sismógrafo Alerta - Estadísticas y Análisis</title>
+    <title>Sismógrafo Alerta - Análisis Sismológico</title>
+    <link rel="icon" href="data:,">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body class="bg-gray-950 text-gray-100 font-sans min-h-screen flex flex-col">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0f;
+            color: #e8e8e8;
+            min-height: 100vh;
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(245, 158, 11, 0.3); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(245, 158, 11, 0.5); }
 
-<header class="bg-gray-900 border-b border-gray-800 p-4 sticky top-0 z-50 shadow-md">
-    <div class="max-w-7xl mx-auto flex justify-between items-center">
-        <div class="flex items-center gap-4">
-            <h1 class="text-xl font-bold text-amber-500 flex items-center gap-2">
-                📊 Panel de Análisis Sismológico
-            </h1>
-            <nav class="hidden md:flex gap-2">
-                <a href="/index.html" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded border border-gray-700 transition-all">
-                    ⬅️ Volver al Mapa en Vivo
-                </a>
-            </nav>
+        .glass-header {
+            background: rgba(10, 10, 15, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 12px 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .logo-text {
+            font-size: 1.1rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #f59e0b, #d97706, #b45309);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo-text .icon {
+            -webkit-text-fill-color: initial;
+            color: #f59e0b;
+        }
+
+        .btn-glass {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: #e8e8e8;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+        .btn-glass:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        .btn-glass.primary {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+        }
+        .btn-glass.primary:hover {
+            background: rgba(245, 158, 11, 0.15);
+        }
+
+        .glass-card {
+            background: rgba(20, 20, 30, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .glass-card-header {
+            padding: 14px 18px;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-card {
+            background: rgba(20, 20, 30, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            padding: 18px 20px;
+            transition: all 0.3s ease;
+        }
+        .kpi-card:hover {
+            border-color: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+        .kpi-label {
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-top: 4px;
+            letter-spacing: -0.5px;
+        }
+        .kpi-value.blue { color: #3b82f6; }
+        .kpi-value.red { color: #ef4444; }
+        .kpi-value.amber { color: #f59e0b; }
+        .kpi-value.green { color: #22c55e; }
+        .kpi-icon {
+            font-size: 1.8rem;
+            opacity: 0.6;
+        }
+
+        .chart-container {
+            height: 300px;
+            position: relative;
+            padding: 4px;
+        }
+        .chart-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .main-content {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 16px 20px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .charts-grid .full-width {
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 1024px) {
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+            .charts-grid { grid-template-columns: 1fr; }
+            .glass-header { padding: 10px 16px; }
+            .logo-text { font-size: 0.95rem; }
+        }
+
+        @media (max-width: 640px) {
+            .kpi-grid { grid-template-columns: 1fr; }
+            .glass-header { padding: 8px 12px; flex-direction: column; align-items: stretch; }
+            .logo-text { font-size: 0.85rem; justify-content: center; }
+            .glass-header .flex { justify-content: center; flex-wrap: wrap; }
+            .main-content { padding: 10px; gap: 10px; }
+            .kpi-value { font-size: 1.5rem; }
+            .chart-container { height: 220px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ✅ HEADER PROFESIONAL -->
+<header class="glass-header">
+    <div class="flex items-center gap-3">
+        <div class="logo-text">
+            <span class="icon">📊</span>
+            Panel de Análisis Sismológico
         </div>
-        <button onclick="cargarDatosEstadisticos()" class="bg-amber-600 hover:bg-amber-500 text-white font-medium text-xs px-3 py-2 rounded shadow transition-all active:scale-95 cursor-pointer">
-            🔄 Actualizar Datos
+        <span class="text-[0.5rem] font-semibold uppercase tracking-wider text-amber-500/70 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+            Estadísticas en Tiempo Real
+        </span>
+    </div>
+    <div class="flex items-center gap-3">
+        <a href="/index.html" class="btn-glass">
+            ⬅️ Volver al Mapa
+        </a>
+        <button onclick="cargarDatosEstadisticos()" class="btn-glass primary">
+            🔄 Actualizar
         </button>
     </div>
 </header>
 
-<main class="flex-1 max-w-7xl w-full mx-auto p-4 space-y-6">
+<!-- ✅ MAIN CONTENT -->
+<div class="main-content">
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="bg-gray-900 rounded-xl border border-gray-800 p-5 shadow-xl flex items-center justify-between">
-            <div>
-                <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Total Eventos Registrados</p>
-                <h3 id="kpi-total" class="text-3xl font-bold text-gray-100 mt-1">0</h3>
+    <!-- ✅ KPIS -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="flex justify-between items-start">
+                <div>
+                    <div class="kpi-label">Total Eventos Registrados</div>
+                    <div class="kpi-value blue" id="kpi-total">0</div>
+                </div>
+                <span class="kpi-icon">🌐</span>
             </div>
-            <div class="p-3 bg-blue-500/10 text-blue-400 rounded-lg border border-blue-500/20 text-2xl">🌐</div>
         </div>
-
-        <div class="bg-gray-900 rounded-xl border border-gray-800 p-5 shadow-xl flex items-center justify-between">
-            <div>
-                <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Magnitud Máxima</p>
-                <h3 id="kpi-maxima" class="text-3xl font-bold text-red-400 mt-1">M 0.0</h3>
-                <p id="kpi-maxima-lugar" class="text-[11px] text-gray-500 mt-1 truncate max-w-[200px]">Ninguno</p>
+        <div class="kpi-card">
+            <div class="flex justify-between items-start">
+                <div>
+                    <div class="kpi-label">Magnitud Máxima</div>
+                    <div class="kpi-value red" id="kpi-maxima">M 0.0</div>
+                    <div class="text-[0.6rem] text-slate-500 truncate max-w-[160px]" id="kpi-maxima-lugar">Ninguno</div>
+                </div>
+                <span class="kpi-icon">💥</span>
             </div>
-            <div class="p-3 bg-red-500/10 text-red-400 rounded-lg border border-red-500/20 text-2xl">💥</div>
         </div>
-
-        <div class="bg-gray-900 rounded-xl border border-gray-800 p-5 shadow-xl flex items-center justify-between">
-            <div>
-                <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Alertas Críticas (≥ 5.5)</p>
-                <h3 id="kpi-criticos" class="text-3xl font-bold text-amber-400 mt-1">0%</h3>
-                <p id="kpi-criticos-conteo" class="text-[11px] text-gray-500 mt-1">0 de 0 sismos</p>
+        <div class="kpi-card">
+            <div class="flex justify-between items-start">
+                <div>
+                    <div class="kpi-label">Alertas Críticas (≥ 5.5)</div>
+                    <div class="kpi-value amber" id="kpi-criticos">0%</div>
+                    <div class="text-[0.6rem] text-slate-500" id="kpi-criticos-conteo">0 de 0 sismos</div>
+                </div>
+                <span class="kpi-icon">🚨</span>
             </div>
-            <div class="p-3 bg-amber-500/10 text-amber-400 rounded-lg border border-amber-500/20 text-2xl">🚨</div>
+        </div>
+        <div class="kpi-card">
+            <div class="flex justify-between items-start">
+                <div>
+                    <div class="kpi-label">Magnitud Promedio</div>
+                    <div class="kpi-value green" id="kpi-promedio">M 0.0</div>
+                    <div class="text-[0.6rem] text-slate-500">Rango histórico</div>
+                </div>
+                <span class="kpi-icon">📈</span>
+            </div>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        <div class="bg-gray-900 rounded-xl border border-gray-800 p-4 shadow-xl flex flex-col h-[350px]">
-            <h2 class="font-semibold text-gray-200 text-sm mb-4">📈 Tendencia de Magnitudes en el Tiempo</h2>
-            <div class="flex-1 relative min-h-0 w-full">
+    <!-- ✅ GRÁFICOS -->
+    <div class="charts-grid">
+        <!-- Líneas -->
+        <div class="glass-card">
+            <div class="glass-card-header">
+                <span>📈 Tendencia de Magnitudes</span>
+                <span class="text-[0.55rem] font-normal text-slate-500">Últimos eventos</span>
+            </div>
+            <div class="chart-container">
                 <canvas id="chartLineas"></canvas>
             </div>
         </div>
 
-        <div class="bg-gray-900 rounded-xl border border-gray-800 p-4 shadow-xl flex flex-col h-[350px]">
-            <h2 class="font-semibold text-gray-200 text-sm mb-4">📊 Volumen de Actividad por Región</h2>
-            <div class="flex-1 relative min-h-0 w-full">
+        <!-- Barras -->
+        <div class="glass-card">
+            <div class="glass-card-header">
+                <span>📊 Actividad por Región</span>
+                <span class="text-[0.55rem] font-normal text-slate-500">Distribución geográfica</span>
+            </div>
+            <div class="chart-container">
                 <canvas id="chartBarras"></canvas>
             </div>
         </div>
 
-        <div class="lg:col-span-2 bg-gray-900 rounded-xl border border-gray-800 p-4 shadow-xl flex flex-col h-[320px] items-center">
-            <h2 class="font-semibold text-gray-200 text-sm mb-2 w-full text-left">🍕 Distribución de Severidad (Moderados vs Críticos)</h2>
-            <div class="flex-1 relative min-h-0 h-full w-[260px]">
-                <canvas id="chartPastel"></canvas>
+        <!-- Pastel -->
+        <div class="glass-card full-width">
+            <div class="glass-card-header">
+                <span>🍕 Distribución de Severidad</span>
+                <span class="text-[0.55rem] font-normal text-slate-500">Moderados vs Críticos</span>
+            </div>
+            <div class="chart-container" style="height: 260px;">
+                <div class="flex justify-center items-center h-full">
+                    <div style="width: 220px; height: 220px; position: relative;">
+                        <canvas id="chartPastel"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
-
     </div>
-</main>
+</div>
 
+<!-- ✅ SCRIPT COMPLETO -->
 <script>
-    // 🌐 URL de tu API en Quarkus (Apunta a localhost en desarrollo)
-    const BACKEND_URL = "http://localhost:8083";
+    // ✅ CONFIGURACIÓN: URL del backend en producción
+    const BACKEND_URL = window.location.hostname !== "localhost"
+        ? "https://detector-terremotos-api-326103016260.us-central1.run.app"  // ✅ URL corregida
+        : "http://localhost:8083";
 
     let instanciaLineas = null;
     let instanciaBarras = null;
@@ -99,9 +320,13 @@
         return "Otros Países 🏳️";
     }
 
+    function calcularPromedio(arr) {
+        if (!arr || arr.length === 0) return 0;
+        return arr.reduce((a, b) => a + b, 0) / arr.length;
+    }
+
     async function cargarDatosEstadisticos() {
         try {
-            // 🛠️ Modificado para usar la URL absoluta
             const response = await fetch(`${BACKEND_URL}/api/sismos`);
 
             if (response.status === 204) {
@@ -122,6 +347,7 @@
             const totalSismos = sismos.length;
             let sismoMaximo = sismos[0];
             let cantidadCriticos = 0;
+            let sumaMagnitudes = 0;
 
             const conteoPaises = { "Perú 🇵🇪": 0, "Chile 🇨🇱": 0, "Otros Países 🏳️": 0 };
 
@@ -136,6 +362,7 @@
                 if (sismo.alertaCritica) {
                     cantidadCriticos++;
                 }
+                sumaMagnitudes += sismo.magnitud;
                 const pais = obtenerCategoriaPais(sismo.lugar);
                 conteoPaises[pais] = (conteoPaises[pais] || 0) + 1;
 
@@ -143,6 +370,8 @@
                 etiquetasTiempo.push(fecha.toLocaleDateString() + " " + fecha.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
                 valoresMagnitud.push(sismo.magnitud);
             });
+
+            const promedio = totalSismos > 0 ? (sumaMagnitudes / totalSismos) : 0;
 
             // --- RENDERIZAR KPIs ---
             document.getElementById('kpi-total').innerText = totalSismos;
@@ -152,21 +381,31 @@
             const porcentajeCriticos = totalSismos > 0 ? ((cantidadCriticos / totalSismos) * 100).toFixed(1) : "0.0";
             document.getElementById('kpi-criticos').innerText = `${porcentajeCriticos}%`;
             document.getElementById('kpi-criticos-conteo').innerText = `${cantidadCriticos} de ${totalSismos} eventos`;
+            document.getElementById('kpi-promedio').innerText = `M ${promedio.toFixed(1)}`;
 
             // --- RENDERIZAR GRÁFICOS ---
             const opcionesComunesGrid = {
-                scales: {
-                    x: { grid: { color: '#1f2937' }, ticks: { color: '#9ca3af', font: { size: 10 } } },
-                    y: { grid: { color: '#1f2937' }, ticks: { color: '#9ca3af' } }
-                },
-                plugins: { legend: { display: false } },
                 responsive: true,
-                maintainAspectRatio: false
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                },
+                scales: {
+                    x: {
+                        grid: { color: 'rgba(255,255,255,0.03)' },
+                        ticks: { color: '#64748b', font: { size: 9 } }
+                    },
+                    y: {
+                        grid: { color: 'rgba(255,255,255,0.03)' },
+                        ticks: { color: '#64748b', font: { size: 9 } }
+                    }
+                }
             };
 
             // 1. Gráfico de Líneas
             if (instanciaLineas) instanciaLineas.destroy();
-            instanciaLineas = new Chart(document.getElementById('chartLineas'), {
+            const ctxLineas = document.getElementById('chartLineas').getContext('2d');
+            instanciaLineas = new Chart(ctxLineas, {
                 type: 'line',
                 data: {
                     labels: etiquetasTiempo,
@@ -174,53 +413,113 @@
                         label: 'Magnitud',
                         data: valoresMagnitud,
                         borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.2,
+                        backgroundColor: (context) => {
+                            const gradient = context.chart.ctx.createLinearGradient(0, 0, 0, 300);
+                            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
+                            gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+                            return gradient;
+                        },
+                        borderWidth: 2.5,
+                        tension: 0.3,
                         fill: true,
-                        pointBackgroundColor: '#60a5fa'
+                        pointBackgroundColor: '#60a5fa',
+                        pointBorderColor: '#1e40af',
+                        pointBorderWidth: 1,
+                        pointRadius: 3,
+                        pointHoverRadius: 6
                     }]
                 },
-                options: opcionesComunesGrid
+                options: {
+                    ...opcionesComunesGrid,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(10,10,15,0.9)',
+                            borderColor: 'rgba(255,255,255,0.05)',
+                            borderWidth: 1,
+                            titleColor: '#e8e8e8',
+                            bodyColor: '#94a3b8',
+                            cornerRadius: 8
+                        }
+                    }
+                }
             });
 
             // 2. Gráfico de Barras
             if (instanciaBarras) instanciaBarras.destroy();
-            instanciaBarras = new Chart(document.getElementById('chartBarras'), {
+            const ctxBarras = document.getElementById('chartBarras').getContext('2d');
+            instanciaBarras = new Chart(ctxBarras, {
                 type: 'bar',
                 data: {
                     labels: Object.keys(conteoPaises),
                     datasets: [{
                         data: Object.values(conteoPaises),
-                        backgroundColor: ['#ef4444', '#f59e0b', '#10b981'],
-                        borderRadius: 4
+                        backgroundColor: ['rgba(239, 68, 68, 0.8)', 'rgba(59, 130, 246, 0.8)', 'rgba(34, 197, 94, 0.8)'],
+                        borderColor: ['#ef4444', '#3b82f6', '#22c55e'],
+                        borderWidth: 1,
+                        borderRadius: 6
                     }]
                 },
-                options: opcionesComunesGrid
+                options: {
+                    ...opcionesComunesGrid,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(10,10,15,0.9)',
+                            borderColor: 'rgba(255,255,255,0.05)',
+                            borderWidth: 1,
+                            titleColor: '#e8e8e8',
+                            bodyColor: '#94a3b8',
+                            cornerRadius: 8
+                        }
+                    }
+                }
             });
 
             // 3. Gráfico de Pastel
             if (instanciaPastel) instanciaPastel.destroy();
-            instanciaPastel = new Chart(document.getElementById('chartPastel'), {
+            const ctxPastel = document.getElementById('chartPastel').getContext('2d');
+            instanciaPastel = new Chart(ctxPastel, {
                 type: 'pie',
                 data: {
                     labels: ['Moderados (< 5.5)', 'Críticos (≥ 5.5)'],
                     datasets: [{
                         data: [totalSismos - cantidadCriticos, cantidadCriticos],
-                        backgroundColor: ['#10b981', '#ef4444'],
-                        borderWidth: 2,
-                        borderColor: '#111827'
+                        backgroundColor: ['rgba(34, 197, 94, 0.8)', 'rgba(239, 68, 68, 0.8)'],
+                        borderColor: ['#22c55e', '#ef4444'],
+                        borderWidth: 2
                     }]
                 },
                 options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: {
                             position: 'bottom',
-                            labels: { color: '#e5e7eb', font: { size: 11 } }
+                            labels: {
+                                color: '#94a3b8',
+                                font: { size: 11, weight: '500' },
+                                padding: 16,
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(10,10,15,0.9)',
+                            borderColor: 'rgba(255,255,255,0.05)',
+                            borderWidth: 1,
+                            titleColor: '#e8e8e8',
+                            bodyColor: '#94a3b8',
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    let percentage = ((context.parsed / total) * 100).toFixed(1);
+                                    return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                                }
+                            }
                         }
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false
+                    }
                 }
             });
 
@@ -235,13 +534,26 @@
         document.getElementById('kpi-maxima-lugar').innerText = "Ninguno";
         document.getElementById('kpi-criticos').innerText = "0%";
         document.getElementById('kpi-criticos-conteo').innerText = "0 de 0 sismos";
+        document.getElementById('kpi-promedio').innerText = "M 0.0";
 
-        if (instanciaLineas) instanciaLineas.destroy();
-        if (instanciaBarras) instanciaBarras.destroy();
-        if (instanciaPastel) instanciaPastel.destroy();
+        if (instanciaLineas) { instanciaLineas.destroy(); instanciaLineas = null; }
+        if (instanciaBarras) { instanciaBarras.destroy(); instanciaBarras = null; }
+        if (instanciaPastel) { instanciaPastel.destroy(); instanciaPastel = null; }
     }
 
-    window.onload = cargarDatosEstadisticos;
+    // ✅ Auto-refresh cada 30 segundos
+    let intervaloAutoRefresh = null;
+
+    function iniciarAutoRefresh() {
+        if (intervaloAutoRefresh) clearInterval(intervaloAutoRefresh);
+        intervaloAutoRefresh = setInterval(cargarDatosEstadisticos, 30000);
+    }
+
+    window.onload = function() {
+        cargarDatosEstadisticos();
+        iniciarAutoRefresh();
+    };
 </script>
+
 </body>
 </html>

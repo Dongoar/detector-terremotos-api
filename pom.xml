@@ -31,26 +31,7 @@
     </dependencyManagement>
 
     <dependencies>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-hibernate-reactive-panache</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-rest-client-jackson</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-rest-jackson</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-scheduler</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-reactive-pg-client</artifactId>
-        </dependency>
+        <!-- ✅ Core -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-arc</artifactId>
@@ -59,10 +40,46 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest</artifactId>
         </dependency>
+
+        <!-- ✅ Base de datos -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-hibernate-reactive-panache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-reactive-pg-client</artifactId>
+        </dependency>
+
+        <!-- ✅ REST Client -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-rest-client-jackson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-rest-jackson</artifactId>
+        </dependency>
+
+        <!-- ✅ Scheduler -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-scheduler</artifactId>
+        </dependency>
+
+        <!-- ✅ WebSocket -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-websockets</artifactId>
+        </dependency>
+
+        <!-- ✅ Docker -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-container-image-docker</artifactId>
         </dependency>
+
+        <!-- ✅ Test -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-junit</artifactId>

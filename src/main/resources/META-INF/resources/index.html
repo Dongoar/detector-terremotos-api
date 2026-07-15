@@ -3,182 +3,714 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sismógrafo Alerta - Dashboard</title>
+    <title>Sismógrafo Alerta Centro - Sistema de Monitoreo Sísmico</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-</head>
-<body class="bg-gray-950 text-gray-100 font-sans min-h-screen flex flex-col">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0f;
+            color: #e8e8e8;
+            height: 100vh;
+            overflow: hidden;
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(239, 68, 68, 0.3); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(239, 68, 68, 0.5); }
 
-<header class="bg-gray-900 border-b border-gray-800 p-4 sticky top-0 z-50 shadow-md">
-    <div class="max-w-7xl mx-auto flex justify-between items-center">
-        <h1 class="text-xl font-bold text-red-500 flex items-center gap-2">
-            🚨 Sismógrafo Alerta Centro
-        </h1>
-        <div class="flex items-center gap-4">
-            <a href="/estadisticas.html" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-1.5 rounded border border-gray-700 transition-all">
-                📊 Ver Estadísticas
-            </a>
-            <span class="bg-green-500/10 text-green-400 text-xs px-2.5 py-1 rounded-full font-medium border border-green-500/20 animate-pulse">
-                • Monitoreo Activo
-            </span>
-        </div>
+        .glass-header {
+            background: rgba(10, 10, 15, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 12px 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-text {
+            font-size: 1.25rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ef4444, #dc2626, #b91c1c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo-text .icon { -webkit-text-fill-color: initial; color: #ef4444; }
+        .logo-badge {
+            font-size: 0.55rem;
+            font-weight: 600;
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            padding: 2px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            -webkit-text-fill-color: #ef4444;
+        }
+
+        .status-pulse {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse-dot 2s infinite;
+            margin-right: 6px;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(0.7); }
+        }
+
+        .status-text {
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .glass-card {
+            background: rgba(20, 20, 30, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .glass-card-header {
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            min-height: 350px;
+            background: #0a0a0f;
+        }
+        .leaflet-control-zoom {
+            border: none !important;
+            background: rgba(20, 20, 30, 0.8) !important;
+            backdrop-filter: blur(8px) !important;
+            border-radius: 10px !important;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+        }
+        .leaflet-control-zoom a {
+            color: #e8e8e8 !important;
+            background: transparent !important;
+            border-color: rgba(255, 255, 255, 0.05) !important;
+        }
+        .leaflet-control-zoom a:hover {
+            background: rgba(255, 255, 255, 0.05) !important;
+        }
+
+        .sismo-item {
+            padding: 10px 14px;
+            margin-bottom: 6px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        .sismo-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateX(4px);
+        }
+        .sismo-item.critico {
+            background: rgba(239, 68, 68, 0.08);
+            border-color: rgba(239, 68, 68, 0.15);
+        }
+        .sismo-magnitud {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #f59e0b;
+        }
+        .sismo-magnitud.critico { color: #ef4444; }
+        .sismo-lugar {
+            font-size: 0.75rem;
+            color: #c8c8c8;
+            font-weight: 400;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 180px;
+        }
+        .sismo-fecha {
+            font-size: 0.6rem;
+            color: #64748b;
+            font-weight: 400;
+        }
+        .sismo-badge {
+            font-size: 0.5rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .sismo-badge.peru {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+        .sismo-badge.chile {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+        }
+        .sismo-badge.otros {
+            background: rgba(255, 255, 255, 0.05);
+            color: #64748b;
+        }
+
+        .btn-eliminar {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #ef4444;
+        }
+        .sismo-item:hover .btn-eliminar { opacity: 1; }
+
+        .btn-glass {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: #e8e8e8;
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-glass:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        .btn-glass.danger:hover {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        .btn-glass.success {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+        }
+        .btn-glass.success:hover {
+            background: rgba(34, 197, 94, 0.15);
+        }
+
+        select {
+            appearance: none;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: #e8e8e8;
+            padding: 5px 28px 5px 12px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            cursor: pointer;
+            outline: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2364748b'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+        }
+        select:hover { border-color: rgba(255, 255, 255, 0.1); }
+        select:focus { border-color: rgba(239, 68, 68, 0.3); }
+        select option { background: #1a1a2e; color: #e8e8e8; }
+
+        .counter {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #64748b;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 2px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .counter span { color: #e8e8e8; }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 12px;
+            padding: 12px 20px 20px 20px;
+            height: calc(100vh - 72px);
+        }
+        .map-container { height: 100%; min-height: 0; }
+        .sidebar-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .sidebar-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 14px 14px 14px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr 1fr;
+                height: calc(100vh - 72px);
+                padding: 10px;
+                gap: 10px;
+            }
+            .map-container { height: 100%; min-height: 200px; }
+            .sidebar-container { height: 100%; min-height: 200px; }
+            .glass-header { padding: 8px 14px; }
+            .logo-text { font-size: 0.95rem; }
+            .logo-badge { display: none; }
+            .status-text { font-size: 0.6rem; }
+        }
+        @media (max-width: 480px) {
+            .main-grid {
+                padding: 6px;
+                gap: 6px;
+                height: calc(100vh - 60px);
+            }
+            .glass-header { padding: 6px 10px; }
+            .logo-text { font-size: 0.75rem; gap: 4px; }
+            .logo-text .icon { font-size: 0.9rem; }
+            .glass-card-header { font-size: 0.6rem; padding: 6px 10px; }
+            .sismo-item { padding: 6px 10px; }
+            .sismo-magnitud { font-size: 0.8rem; }
+            .sismo-lugar { font-size: 0.6rem; max-width: 100px; }
+            select { font-size: 0.6rem; padding: 4px 24px 4px 8px; }
+            .btn-glass { font-size: 0.55rem; padding: 4px 8px; }
+            .counter { font-size: 0.6rem; padding: 2px 6px; }
+            .sidebar-scroll { padding: 6px 8px 8px 8px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="glass-header">
+    <div class="flex items-center gap-3">
+        <div class="logo-text"><span class="icon">🚨</span>Sismógrafo Alerta</div>
+        <span class="logo-badge">Centro de Monitoreo</span>
+    </div>
+    <div class="flex items-center gap-3 md:gap-5">
+        <a href="/estadisticas.html" class="btn-glass">📊 Análisis</a>
+        <div class="status-text"><span class="status-pulse"></span>En Vivo</div>
+        <span id="status-sse" class="text-[0.6rem] font-medium px-2 py-1 rounded-full border border-green-500/20 text-green-400 bg-green-500/5">🟢 Conectado</span>
+        <span id="sse-reconectando" class="hidden text-[0.6rem] font-medium px-2 py-1 rounded-full border border-orange-500/20 text-orange-400 bg-orange-500/5">🔄 Reconectando...</span>
     </div>
 </header>
 
-<main class="flex-1 max-w-7xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-    <div class="lg:col-span-2 bg-gray-900 rounded-xl border border-gray-800 shadow-xl overflow-hidden flex flex-col min-h-[450px]">
-        <div class="p-4 border-b border-gray-800 flex justify-between items-center">
-            <h2 class="font-semibold text-gray-200">Geolocalización de Eventos Recientes</h2>
-            <span class="text-xs text-gray-400">Región Global</span>
+<!-- MAIN CONTENT -->
+<div class="main-grid">
+    <!-- MAPA -->
+    <div class="glass-card map-container">
+        <div class="glass-card-header">
+            <span>🌍 Geolocalización de Eventos</span>
+            <span class="text-[0.55rem] font-normal text-slate-500">Región Global</span>
         </div>
-        <div id="map" class="flex-1 w-full h-full bg-gray-800"></div>
+        <div id="map" style="height: calc(100% - 40px); width: 100%;"></div>
     </div>
 
-    <div class="bg-gray-900 rounded-xl border border-gray-800 shadow-xl flex flex-col h-[600px] lg:h-auto">
-
-        <div class="p-4 border-b border-gray-800 flex justify-between items-center gap-2">
-            <h2 class="font-semibold text-gray-200 flex-1">Historial de Registros</h2>
-            <button onclick="limpiarPantalla()" class="text-[11px] bg-red-950/40 hover:bg-red-900/40 text-red-400 px-2 py-1 rounded border border-red-500/20 active:scale-95 transition-all cursor-pointer">
-                🗑️ Limpiar DB
-            </button>
-            <span id="contador" class="text-xs bg-gray-800 text-gray-300 px-2 py-1 rounded">0 sismos</span>
-        </div>
-
-        <div class="p-4 bg-gray-900/50 border-b border-gray-800 flex gap-2 items-center">
-            <div class="flex-1">
-                <select id="filtro-pais" onchange="filtrarYRenderizar()" class="w-full bg-gray-800 text-gray-200 text-xs rounded border border-gray-700 p-2 focus:outline-none focus:border-red-500 cursor-pointer">
-                    <option value="todos">🌍 Ver Todos los Países</option>
-                    <option value="peru">🇵🇪 Perú</option>
-                    <option value="chile">🇨🇱 Chile</option>
-                    <option value="otros">🏳️ Otros Países</option>
-                </select>
+    <!-- SIDEBAR -->
+    <div class="glass-card sidebar-container">
+        <div class="glass-card-header">
+            <span>📋 Historial de Registros</span>
+            <div class="flex items-center gap-2">
+                <button onclick="limpiarPantalla()" class="btn-glass danger" title="Eliminar tu historial">🗑️</button>
+                <span class="counter"><span id="contador">0</span> sismos</span>
             </div>
-            <button onclick="descargarCSV()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs px-3 py-2 rounded shadow transition-all active:scale-95 flex items-center gap-1 cursor-pointer" title="Descargar datos actuales en formato Excel / CSV">
-                📥 Exportar
-            </button>
         </div>
-
-        <div id="lista-sismos" class="p-4 overflow-y-auto flex-1 space-y-3 custom-scrollbar">
-            <div class="text-center text-gray-500 text-sm py-8">Cargando datos del sismógrafo...</div>
+        <div class="flex items-center gap-2 px-3 py-2 border-b border-white/5 flex-wrap">
+            <select id="filtro-pais" onchange="filtrarYRenderizar()" class="flex-1 min-w-[100px]">
+                <option value="todos">🌍 Todos</option>
+                <option value="peru">🇵🇪 Perú</option>
+                <option value="chile">🇨🇱 Chile</option>
+                <option value="otros">🏳️ Otros</option>
+            </select>
+            <button onclick="descargarCSV()" class="btn-glass success text-[0.6rem]">📥 Exportar</button>
+        </div>
+        <div id="lista-sismos" class="sidebar-scroll">
+            <div class="text-center text-slate-500 text-sm py-8">Cargando datos del sismógrafo...</div>
         </div>
     </div>
-</main>
+</div>
 
 <script>
-    // Configuración inteligente: detecta si estás en local o en la nube
+    // ============================================================
+    // ✅ CONFIGURACIÓN
+    // ============================================================
     const IS_PROD = window.location.hostname !== "localhost";
-    const BACKEND_URL = IS_PROD ? "https://TU-URL-DE-CLOUD-RUN.a.run.app" : "http://localhost:8083";
+    const BACKEND_URL = IS_PROD ? "https://detector-terremotos-api-326103016260.us-central1.run.app" : "http://localhost:8083";
+    // ✅ OBTENER ID DE USUARIO (guardado en localStorage)
+    function obtenerUsuarioId() {
+        let usuarioId = localStorage.getItem('usuarioId');
+        if (!usuarioId) {
+            usuarioId = 'user_' + Date.now() + '_' + Math.random().toString(36).substring(2, 10);
+            localStorage.setItem('usuarioId', usuarioId);
+        }
+        return usuarioId;
+    }
+    const USUARIO_ID = obtenerUsuarioId();
+    console.log('🆔 Usuario ID:', USUARIO_ID);
 
-    const map = L.map('map').setView([-12.0463, -77.0427], 5);
+    // ============================================================
+    // ✅ MAPA
+    // ============================================================
+    const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([-12.0463, -77.0427], 4);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap &copy; CARTO'
+        attribution: '&copy; OpenStreetMap &copy; CARTO',
+        minZoom: 2,
+        maxZoom: 18
     }).addTo(map);
 
+    setTimeout(() => map.invalidateSize(), 100);
+    window.addEventListener('resize', () => map.invalidateSize());
+    window.addEventListener('load', () => setTimeout(() => map.invalidateSize(), 300));
+
+    // ============================================================
+    // ✅ VARIABLES
+    // ============================================================
     let marcadores = {};
     const sonidoAlarma = new Audio('/alarma.mp3');
     let timeoutAudio = null;
     let todosLosSismos = [];
+    let ultimoSismoId = 0;
+    let audioActivado = false;
+    let pollingInterval = null;
 
-    function obtenerCategoriaPais(lugar) {
-        if (!lugar) return "otros";
+    // ============================================================
+    // ✅ FUNCIONES AUXILIARES
+    // ============================================================
+    function obtenerInfoPais(lugar) {
+        if (!lugar) return { categoria: "otros", nombre: "Otros", emoji: "🌍", flag: "🏳️", color: "#64748b" };
         const lugarLower = lugar.toLowerCase();
-        if (lugarLower.includes("peru")) return "peru";
-        if (lugarLower.includes("chile")) return "chile";
-        return "otros";
+        if (lugarLower.includes("peru")) return { categoria: "peru", nombre: "Perú", emoji: "🇵🇪", flag: "🇵🇪", color: "#ef4444" };
+        if (lugarLower.includes("chile")) return { categoria: "chile", nombre: "Chile", emoji: "🇨🇱", flag: "🇨🇱", color: "#3b82f6" };
+        return { categoria: "otros", nombre: "Otros", emoji: "🌍", flag: "🏳️", color: "#64748b" };
+    }
+    function obtenerCategoriaPais(lugar) { return obtenerInfoPais(lugar).categoria; }
+    function obtenerColorPais(lugar) { return obtenerInfoPais(lugar).color; }
+
+    // ============================================================
+    // ✅ TTS (Text-to-Speech)
+    // ============================================================
+    function hablar(texto) {
+        if (!window.speechSynthesis) return;
+        window.speechSynthesis.cancel();
+        let voces = window.speechSynthesis.getVoices();
+        if (voces.length === 0) {
+            window.speechSynthesis.onvoiceschanged = () => {
+                voces = window.speechSynthesis.getVoices();
+                hablarConVoz(texto, voces);
+            };
+            setTimeout(() => {
+                if (window.speechSynthesis.getVoices().length === 0) hablarConVoz(texto, []);
+            }, 3000);
+        } else {
+            hablarConVoz(texto, voces);
+        }
+    }
+    function hablarConVoz(texto, voces) {
+        try {
+            const utterance = new SpeechSynthesisUtterance(texto);
+            utterance.lang = 'es-ES';
+            utterance.rate = 0.9;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+            const vozEspanol = voces.find(v => v.lang.startsWith('es'));
+            if (vozEspanol) utterance.voice = vozEspanol;
+            window.speechSynthesis.speak(utterance);
+        } catch (error) { console.error('❌ Error TTS:', error); }
     }
 
-    function reproducirAlertaDinamica(esCritico) {
+    // ============================================================
+    // ✅ ALERTA VISUAL
+    // ============================================================
+    function mostrarAlertaEspecial(sismo, paisNombre, paisEmoji) {
+        const alertaDiv = document.createElement('div');
+        alertaDiv.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 z-[9999] bg-gradient-to-r from-red-600 to-red-700 text-white px-8 py-5 rounded-2xl shadow-2xl border-2 border-yellow-400/50 animate-bounce';
+        alertaDiv.innerHTML = `
+            <div class="text-center">
+                <div class="text-5xl animate-pulse">🔴</div>
+                <div class="text-3xl font-extrabold mt-1">${paisEmoji} ¡${paisNombre}!</div>
+                <div class="text-2xl font-bold mt-1">Magnitud ${sismo.magnitud.toFixed(1)}</div>
+                <div class="text-sm mt-2 max-w-xs opacity-90">${sismo.lugar}</div>
+                <button onclick="this.parentElement.parentElement.remove()" class="mt-4 bg-white/20 hover:bg-white/30 text-white px-5 py-1.5 rounded-full text-sm font-semibold transition-all">Cerrar</button>
+            </div>
+        `;
+        document.body.appendChild(alertaDiv);
+        setTimeout(() => { if (alertaDiv.parentElement) alertaDiv.remove(); }, 15000);
+    }
+
+    // ============================================================
+    // ✅ AUDIO
+    // ============================================================
+    function activarAudioAutomatico() {
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioContext.state === 'suspended') {
+                audioContext.resume().then(() => {
+                    audioActivado = true;
+                    probarAlarmaReal();
+                }).catch(() => activarConSonidoSilencio());
+            } else {
+                audioActivado = true;
+                probarAlarmaReal();
+            }
+        } catch (e) { activarConSonidoSilencio(); }
+    }
+    function activarConSonidoSilencio() {
+        try {
+            const audioSilencio = new Audio('data:audio/wav;base64,UklGRnoAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoAAACBhYqFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYWA==');
+            audioSilencio.volume = 0.01;
+            audioSilencio.play().then(() => {
+                audioSilencio.pause();
+                audioActivado = true;
+                probarAlarmaReal();
+            }).catch(() => {});
+        } catch (e) {}
+    }
+    function probarAlarmaReal() {
+        sonidoAlarma.load();
+        sonidoAlarma.play().then(() => {
+            sonidoAlarma.pause();
+            sonidoAlarma.currentTime = 0;
+            audioActivado = true;
+        }).catch(() => {});
+    }
+
+    function reproducirAlertaDinamica(sismo) {
+        if (!audioActivado) { activarAudioAutomatico(); return; }
         if (timeoutAudio) clearTimeout(timeoutAudio);
         sonidoAlarma.pause();
         sonidoAlarma.currentTime = 0;
-        sonidoAlarma.play().catch(err => console.warn("Audio bloqueado por navegador:", err));
-        timeoutAudio = setTimeout(() => sonidoAlarma.pause(), esCritico ? 40000 : 20000);
+        sonidoAlarma.play().catch(() => {});
+
+        const infoPais = obtenerInfoPais(sismo.lugar);
+        let mensajeVoz = '';
+        if (infoPais.categoria === 'peru') {
+            mensajeVoz = `Alerta sísmica en Perú. Magnitud ${sismo.magnitud.toFixed(1)}.`;
+            mostrarAlertaEspecial(sismo, 'PERÚ', '🇵🇪');
+        } else if (infoPais.categoria === 'chile') {
+            mensajeVoz = `Alerta sísmica en Chile. Magnitud ${sismo.magnitud.toFixed(1)}.`;
+            mostrarAlertaEspecial(sismo, 'CHILE', '🇨🇱');
+        } else if (sismo.alertaCritica) {
+            mensajeVoz = `Alerta sísmica crítica. Magnitud ${sismo.magnitud.toFixed(1)}.`;
+        } else {
+            mensajeVoz = `Sismo detectado. Magnitud ${sismo.magnitud.toFixed(1)}.`;
+        }
+        setTimeout(() => hablar(mensajeVoz), 1000);
+        timeoutAudio = setTimeout(() => { sonidoAlarma.pause(); }, sismo.alertaCritica ? 30000 : 15000);
     }
 
+    // ============================================================
+    // ✅ RENDERIZADO
+    // ============================================================
     function filtrarYRenderizar() {
         const filtro = document.getElementById('filtro-pais').value;
         const lista = document.getElementById('lista-sismos');
-
-        // Limpiar interfaz
         lista.innerHTML = '';
         Object.values(marcadores).forEach(m => map.removeLayer(m));
         marcadores = {};
-
         const sismosFiltrados = todosLosSismos.filter(s => filtro === "todos" || obtenerCategoriaPais(s.lugar) === filtro);
-        document.getElementById('contador').innerText = `${sismosFiltrados.length} sismos`;
-
+        document.getElementById('contador').innerText = sismosFiltrados.length;
+        if (sismosFiltrados.length === 0) {
+            lista.innerHTML = '<div class="text-center text-slate-500 text-sm py-8">📭 No hay sismos registrados</div>';
+            return;
+        }
         sismosFiltrados.forEach(sismo => {
-            const tarjeta = document.createElement('div');
-            tarjeta.className = `relative p-3.5 mb-2 rounded-lg border cursor-pointer ${sismo.alertaCritica ? 'bg-red-500/10 border-red-500/50' : 'bg-gray-800/40 border-gray-800'}`;
-            tarjeta.innerHTML = `
-                <div class="flex justify-between items-start mb-1">
-                    <span class="text-sm font-bold ${sismo.alertaCritica ? 'text-red-400' : 'text-amber-400'}">M ${sismo.magnitud.toFixed(1)}</span>
-                    <span class="text-[10px] text-gray-500">${new Date(sismo.fechaHora).toLocaleString()}</span>
+            const infoPais = obtenerInfoPais(sismo.lugar);
+            const div = document.createElement('div');
+            div.className = `sismo-item ${sismo.alertaCritica ? 'critico' : ''}`;
+            const badge = infoPais.categoria !== 'otros' ?
+                `<span class="sismo-badge ${infoPais.categoria}">${infoPais.flag} ${infoPais.nombre}</span>` : '';
+            div.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <div class="flex flex-col gap-0.5 flex-1 min-w-0">
+                        <div class="flex items-center gap-2">
+                            <span class="sismo-magnitud ${sismo.alertaCritica ? 'critico' : ''}">M ${sismo.magnitud.toFixed(1)}</span>
+                            ${badge}
+                        </div>
+                        <div class="sismo-lugar">${sismo.lugar}</div>
+                        <div class="sismo-fecha">${new Date(sismo.fechaHora).toLocaleString()}</div>
+                    </div>
+                    <button onclick="eliminarSismoIndividual(${sismo.id}, event)" class="btn-eliminar ml-2 flex-shrink-0" title="Eliminar">×</button>
                 </div>
-                <p class="text-xs text-gray-300 pr-6">${sismo.lugar}</p>
-                <button onclick="eliminarSismoIndividual(${sismo.id}, event)" class="absolute top-2 right-2 text-red-500 hover:text-red-300 text-lg">×</button>
             `;
-            tarjeta.onclick = () => map.setView([sismo.latitud, sismo.longitud], 7);
-            lista.appendChild(tarjeta);
-
+            div.onclick = () => map.setView([sismo.latitud, sismo.longitud], 7);
+            lista.appendChild(div);
             const marker = L.circleMarker([sismo.latitud, sismo.longitud], {
-                radius: sismo.alertaCritica ? 10 : 6,
-                fillColor: sismo.alertaCritica ? '#ef4444' : '#f59e0b',
-                color: '#fff', weight: 1, fillOpacity: 0.8
+                radius: sismo.alertaCritica ? 8 : 5,
+                fillColor: obtenerColorPais(sismo.lugar),
+                color: '#fff',
+                weight: 0.8,
+                fillOpacity: 0.85
             }).addTo(map);
             marcadores[sismo.id] = marker;
         });
+        setTimeout(() => map.invalidateSize(), 100);
     }
 
+    // ============================================================
+    // ✅ CARGAR SISMOS DESDE LA API (FILTRADOS POR USUARIO)
+    // ============================================================
     async function cargarSismos() {
         try {
             const response = await fetch(`${BACKEND_URL}/api/sismos`);
-            todosLosSismos = response.ok ? await response.json() : [];
-            filtrarYRenderizar();
-        } catch (error) { console.error("Error al cargar historial:", error); }
-    }
+            if (response.status === 204) {
+                todosLosSismos = [];
+                filtrarYRenderizar();
+                return;
+            }
+            const sismos = await response.json();
 
-    async function eliminarSismoIndividual(id, evento) {
-        evento.stopPropagation();
-        if (confirm("¿Eliminar este registro?")) {
-            await fetch(`${BACKEND_URL}/api/sismos/${id}`, { method: 'DELETE' });
-            cargarSismos();
+            // ✅ FILTRAR: Solo mostrar sismos del usuario actual
+            const sismosUsuario = sismos.filter(s => s.usuarioId === USUARIO_ID || !s.usuarioId);
+
+            if (sismosUsuario && sismosUsuario.length > 0) {
+                const ultimo = sismosUsuario[0];
+                if (ultimo.id > ultimoSismoId) {
+                    todosLosSismos = sismosUsuario;
+                    filtrarYRenderizar();
+                    reproducirAlertaDinamica(ultimo);
+                    ultimoSismoId = ultimo.id;
+                    console.log('✅ Nuevo sismo detectado:', ultimo.lugar, 'M' + ultimo.magnitud);
+                } else {
+                    todosLosSismos = sismosUsuario;
+                    filtrarYRenderizar();
+                }
+            } else {
+                todosLosSismos = [];
+                filtrarYRenderizar();
+            }
+        } catch (error) {
+            console.error('❌ Error cargando sismos:', error);
         }
     }
 
-    // Inicialización del Stream
+    // ============================================================
+    // ✅ POLLING (CONSULTA PERIÓDICA CADA 3 SEGUNDOS)
+    // ============================================================
+    function iniciarPolling() {
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+        }
+        pollingInterval = setInterval(cargarSismos, 3000);
+        console.log('🔄 Polling iniciado (cada 3 segundos)');
+    }
+
+    // ============================================================
+    // ✅ FUNCIONES DE ELIMINACIÓN Y LIMPIEZA
+    // ============================================================
+    async function eliminarSismoIndividual(id, evento) {
+        evento.stopPropagation();
+        if (!confirm("¿Eliminar este registro?")) return;
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/sismos/${id}`, { method: 'DELETE' });
+            if (response.ok) await cargarSismos();
+        } catch (error) { alert('❌ Error de conexión'); }
+    }
+
+    // ✅ LIMPIAR SOLO EL HISTORIAL DEL USUARIO ACTUAL
+    async function limpiarPantalla() {
+        if (!confirm('⚠️ ¿Eliminar TODOS tus sismos registrados?')) return;
+
+        try {
+            const response = await fetch(`${BACKEND_URL}/api/sismos/limpiar/usuario/${USUARIO_ID}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                todosLosSismos = [];
+                filtrarYRenderizar();
+                alert('✅ Tu historial ha sido limpiado correctamente');
+            } else {
+                alert('❌ Error al limpiar tu historial');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('❌ Error de conexión');
+        }
+    }
+
+    // ============================================================
+    // ✅ EXPORTAR CSV
+    // ============================================================
+    function descargarCSV() {
+        if (todosLosSismos.length === 0) { alert('⚠️ No hay datos'); return; }
+        const headers = ['ID', 'Magnitud', 'Lugar', 'Fecha/Hora', 'Latitud', 'Longitud', 'Alerta Crítica', 'País'];
+        const rows = todosLosSismos.map(s => {
+            const infoPais = obtenerInfoPais(s.lugar);
+            return [s.id, s.magnitud.toFixed(2), `"${s.lugar}"`, new Date(s.fechaHora).toLocaleString(), s.latitud.toFixed(4), s.longitud.toFixed(4), s.alertaCritica ? 'SÍ' : 'NO', infoPais.nombre];
+        });
+        const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `sismos_${new Date().toISOString().slice(0,10)}.csv`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+    }
+
+    // ============================================================
+    // ✅ INICIALIZACIÓN
+    // ============================================================
     cargarSismos();
+    iniciarPolling();
+    sonidoAlarma.load();
+    setTimeout(activarAudioAutomatico, 500);
 
-    const connectSSE = () => {
-        const eventSource = new EventSource(`${BACKEND_URL}/api/sismos/en-vivo`);
+    if (window.speechSynthesis) {
+        const voces = window.speechSynthesis.getVoices();
+        if (voces.length === 0) {
+            window.speechSynthesis.onvoiceschanged = () => {
+                console.log('✅ Voces TTS cargadas:', window.speechSynthesis.getVoices().length);
+            };
+        }
+    }
 
-        eventSource.onmessage = (event) => {
-            const nuevoSismo = JSON.parse(event.data);
-            todosLosSismos.unshift(nuevoSismo);
-            filtrarYRenderizar();
-            reproducirAlertaDinamica(nuevoSismo.alertaCritica);
-        };
-
-        eventSource.onerror = () => {
-            console.warn("Conexión perdida, reconectando...");
-            eventSource.close();
-            setTimeout(connectSSE, 5000); // Reconecta cada 5 segundos
-        };
-    };
-
-    connectSSE();
-
-    // Desbloqueo de audio
-    document.addEventListener('click', () => sonidoAlarma.load(), { once: true });
+    console.log('📋 Dashboard cargado correctamente (modo polling)');
+    console.log('🆔 Tu ID de usuario:', USUARIO_ID);
 </script>
-
-<style>
-    .custom-scrollbar::-webkit-scrollbar { width: 5px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 10px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #374151; }
-</style>
 </body>
 </html>
