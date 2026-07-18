@@ -90,13 +90,17 @@ public class EarthquakeMonitor {
                     long timeMs = properties.has("time") ? properties.get("time").asLong() : 0L;
 
                     long tiempoActual = System.currentTimeMillis();
-                    if ((tiempoActual - timeMs) > 300000) continue;
+
+                    // ✅ CAMBIO 1: Aumentar ventana de tiempo a 24 HORAS (86,400,000 ms)
+                    if ((tiempoActual - timeMs) > 86400000) continue;
 
                     double longitud = coordinates.get(0).asDouble();
                     double latitud = coordinates.get(1).asDouble();
 
                     String lugarLower = place.toLowerCase();
-                    if (mag >= 4.5 || lugarLower.contains("peru") || lugarLower.contains("chile")) {
+
+                    // ✅ CAMBIO 2: Reducir filtro de magnitud a 2.5
+                    if (mag >= 2.5 || lugarLower.contains("peru") || lugarLower.contains("chile")) {
                         Sismo sismo = new Sismo();
                         sismo.usgsId = usgsId;
                         sismo.magnitud = mag;
@@ -107,7 +111,7 @@ public class EarthquakeMonitor {
                         sismo.alertaCritica = mag >= 5.5;
                         sismo.usuarioId = "sistema";
 
-                        sismosFiltrados.add(sismo); // ✅ CORREGIDO
+                        sismosFiltrados.add(sismo);
                     }
                 }
             }
@@ -116,7 +120,12 @@ public class EarthquakeMonitor {
             return Uni.createFrom().failure(e);
         }
 
-        if (sismosFiltrados.isEmpty()) return Uni.createFrom().voidItem();
+        if (sismosFiltrados.isEmpty()) {
+            LOGGER.info("📭 No se encontraron sismos que cumplan los filtros.");
+            return Uni.createFrom().voidItem();
+        }
+
+        LOGGER.info("📊 Procesando " + sismosFiltrados.size() + " sismos encontrados...");
 
         return Multi.createFrom().iterable(sismosFiltrados)
                 .onItem().transformToUniAndConcatenate(this::procesarSismoIndividual)

@@ -380,6 +380,7 @@
     // ============================================================
     const IS_PROD = window.location.hostname !== "localhost";
     const BACKEND_URL = IS_PROD ? "https://detector-terremotos-api-326103016260.us-central1.run.app" : "http://localhost:8083";
+
     // ✅ OBTENER ID DE USUARIO (guardado en localStorage)
     function obtenerUsuarioId() {
         let usuarioId = localStorage.getItem('usuarioId');
@@ -414,9 +415,9 @@
     const sonidoAlarma = new Audio('/alarma.mp3');
     let timeoutAudio = null;
     let todosLosSismos = [];
-    let ultimoSismoId = 0;
     let audioActivado = false;
     let pollingInterval = null;
+    let primeraCarga = true;
 
     // ============================================================
     // ✅ FUNCIONES AUXILIARES
@@ -592,7 +593,7 @@
     }
 
     // ============================================================
-    // ✅ CARGAR SISMOS DESDE LA API (FILTRADOS POR USUARIO)
+    // ✅ CARGAR SISMOS DESDE LA API (CORREGIDO - MUESTRA TODOS)
     // ============================================================
     async function cargarSismos() {
         try {
@@ -600,28 +601,44 @@
             if (response.status === 204) {
                 todosLosSismos = [];
                 filtrarYRenderizar();
+                primeraCarga = false;
                 return;
             }
             const sismos = await response.json();
 
-            // ✅ FILTRAR: Solo mostrar sismos del usuario actual
-            const sismosUsuario = sismos.filter(s => s.usuarioId === USUARIO_ID || !s.usuarioId);
+            // ✅ CORREGIDO: Mostrar TODOS los sismos (sin filtrar por usuario)
+            const sismosUsuario = sismos;
 
             if (sismosUsuario && sismosUsuario.length > 0) {
-                const ultimo = sismosUsuario[0];
-                if (ultimo.id > ultimoSismoId) {
+                // ✅ Si es la primera carga, solo mostrar sin alertas
+                if (primeraCarga) {
                     todosLosSismos = sismosUsuario;
                     filtrarYRenderizar();
-                    reproducirAlertaDinamica(ultimo);
-                    ultimoSismoId = ultimo.id;
-                    console.log('✅ Nuevo sismo detectado:', ultimo.lugar, 'M' + ultimo.magnitud);
+                    primeraCarga = false;
+                    console.log('📋 Primera carga:', sismosUsuario.length, 'sismos cargados');
+                    return;
+                }
+
+                // ✅ Buscar nuevos sismos comparando IDs
+                const idsAnteriores = new Set(todosLosSismos.map(s => s.id));
+                const nuevosSismos = sismosUsuario.filter(s => !idsAnteriores.has(s.id));
+
+                if (nuevosSismos.length > 0) {
+                    // ✅ Tomar el más reciente de los nuevos (mayor ID)
+                    const ultimoNuevo = nuevosSismos.reduce((a, b) => a.id > b.id ? a : b);
+                    todosLosSismos = sismosUsuario;
+                    filtrarYRenderizar();
+                    reproducirAlertaDinamica(ultimoNuevo);
+                    console.log('✅ Nuevo sismo detectado:', ultimoNuevo.lugar, 'M' + ultimoNuevo.magnitud);
                 } else {
+                    // ✅ No hay nuevos sismos, solo actualizar la lista
                     todosLosSismos = sismosUsuario;
                     filtrarYRenderizar();
                 }
             } else {
                 todosLosSismos = [];
                 filtrarYRenderizar();
+                primeraCarga = false;
             }
         } catch (error) {
             console.error('❌ Error cargando sismos:', error);
