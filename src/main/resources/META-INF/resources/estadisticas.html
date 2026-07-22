@@ -304,9 +304,7 @@
 <!-- ✅ SCRIPT COMPLETO -->
 <script>
     // ✅ CONFIGURACIÓN: URL del backend en producción
-    const BACKEND_URL = window.location.hostname !== "localhost"
-        ? "https://detector-terremotos-api-326103016260.us-central1.run.app"  // ✅ URL corregida
-        : "http://localhost:8083";
+const BACKEND_URL = "https://d8e0-2001-1388-110-771e-c218-50ff-fe6b-9170.ngrok-free.app";
 
     let instanciaLineas = null;
     let instanciaBarras = null;
@@ -325,17 +323,23 @@
         return arr.reduce((a, b) => a + b, 0) / arr.length;
     }
 
-    async function cargarDatosEstadisticos() {
-        try {
-            const response = await fetch(`${BACKEND_URL}/api/sismos`);
-
-            if (response.status === 204) {
-                console.warn("La base de datos está vacía.");
-                resetearPantalla();
-                return;
+async function cargarDatosEstadisticos() {
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/sismos`, {
+            headers: {
+                'ngrok-skip-browser-warning': 'true'
             }
+        });
 
-            const sismos = await response.json();
+        if (response.status === 204) {
+            console.warn("La base de datos está vacía.");
+            resetearPantalla();
+            return;
+        }
+
+        const sismos = await response.json();
+
+        // ... resto del código sin cambios
 
             if (!sismos || sismos.length === 0) {
                 console.warn("No se encontraron datos de sismos.");
