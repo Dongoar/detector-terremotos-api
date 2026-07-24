@@ -19,14 +19,23 @@ public class Sismo extends PanacheEntity {
     public double latitud;
     public double longitud;
 
+    // ✅ NUEVO: Profundidad en kilómetros
+    public double profundidad = 0;
+
     @Column(nullable = false)
     public boolean alertaCritica = false;
 
-    // ✅ NUEVO: ID del usuario que guardó el sismo
     @Column(nullable = false)
     public String usuarioId;
 
-    // ✅ Agregar toString() para logs
+    // ✅ NUEVO: País del sismo (Perú, Chile, Argentina, etc.)
+    @Column(nullable = false)
+    public String pais = "Desconocido";
+
+    // ✅ NUEVO: Fuente del dato (IGP, USGS, CSN, etc.)
+    @Column(nullable = false)
+    public String fuente = "USGS";
+
     @Override
     public String toString() {
         return "Sismo{" +
@@ -37,8 +46,11 @@ public class Sismo extends PanacheEntity {
                 ", fechaHora=" + fechaHora +
                 ", latitud=" + latitud +
                 ", longitud=" + longitud +
+                ", profundidad=" + profundidad +
                 ", alertaCritica=" + alertaCritica +
                 ", usuarioId='" + usuarioId + '\'' +
+                ", pais='" + pais + '\'' +
+                ", fuente='" + fuente + '\'' +
                 '}';
     }
 }
