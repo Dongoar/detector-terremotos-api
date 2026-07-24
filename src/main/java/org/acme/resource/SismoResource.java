@@ -8,9 +8,10 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 import org.acme.model.Sismo;
 import org.acme.service.SismoEventBus;
+import org.acme.service.IgpClient;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.reactive.RestStreamElementType;
 
 import java.time.Duration;
@@ -26,37 +27,31 @@ public class SismoResource {
     @Inject
     SismoEventBus eventBus;
 
-    // ✅ GET con CORS manual (reactivo)
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Uni<Response> obtenerHistorial() {
-        LOGGER.info("📊 Obteniendo historial de sismos");
+    @Inject
+    @RestClient
+    IgpClient igpClient;
 
-        return Sismo.listAll(Sort.by("fechaHora").descending())
-                .onItem().transform(sismos -> {
-                    return Response.ok(sismos)
-                            .header("Access-Control-Allow-Origin", "*")
-                            .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-                            .header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, Origin, X-Requested-With")
-                            .header("Access-Control-Expose-Headers", "Content-Type, Cache-Control")
-                            .build();
-                });
-    }
+@GET
+@Produces(MediaType.APPLICATION_JSON)
+public Uni<List<Sismo>> obtenerHistorial() {
+    LOGGER.info("📊 Obteniendo historial de sismos");
+    // ✅ Limitar a los 50 más recientes
+    return Sismo.find("ORDER BY fechaHora DESC")
+            .page(0, 100)
+            .list();
+}
 
-    // ✅ GET /en-vivo con HEARTBEAT y CORS manual
     @GET
     @Path("/en-vivo")
     @Produces(MediaType.SERVER_SENT_EVENTS)
     @RestStreamElementType(MediaType.APPLICATION_JSON)
-    public Response transmitirSismos() {
+    public Multi<Sismo> transmitirSismos() {
         LOGGER.info("📡 Cliente conectado al stream SSE");
 
-        // ✅ HEARTBEAT cada 5 segundos (más frecuente para Cloud Run)
         Multi<Sismo> heartbeat = Multi.createFrom().ticks().every(Duration.ofSeconds(5))
                 .onItem().transform(tick -> null);
 
-        // ✅ Combinar eventos con heartbeat
-        Multi<Sismo> stream = Multi.createBy().merging()
+        return Multi.createBy().merging()
                 .streams(eventBus.getProcessor(), heartbeat)
                 .filter(item -> item != null)
                 .onFailure().recoverWithItem(() -> {
@@ -64,143 +59,44 @@ public class SismoResource {
                     return null;
                 })
                 .filter(item -> item != null);
-
-        // ✅ CORS manual + headers para SSE
-        return Response.ok(stream)
-                .header("Access-Control-Allow-Origin", "*")
-                .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD")
-                .header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, Origin, X-Requested-With, Cache-Control")
-                .header("Access-Control-Expose-Headers", "Content-Type, Cache-Control")
-                .header("Access-Control-Allow-Credentials", "true")
-                .header("Access-Control-Max-Age", "86400")
-                .header("Cache-Control", "no-cache")
-                .header("Connection", "keep-alive")
-                .header("X-Accel-Buffering", "no")
-                .build();
     }
+@GET
+@Path("/test-igp")
+@Produces(MediaType.APPLICATION_JSON)
+public Uni<String> testIgp() {
+    LOGGER.info("🧪 Probando integración con IGP...");
+    return igpClient.getUltimoSismo()
+            .onItem().invoke(response -> LOGGER.info("✅ IGP respondió: " + response))
+            .onFailure().invoke(err -> LOGGER.severe("❌ Error IGP: " + err.getMessage()));
+}
 
-    // ✅ Manejar OPTIONS para /en-vivo (preflight SSE)
-    @OPTIONS
-    @Path("/en-vivo")
-    public Response optionsEnVivo() {
-        return Response.ok()
-                .header("Access-Control-Allow-Origin", "*")
-                .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD")
-                .header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, Origin, X-Requested-With, Cache-Control")
-                .header("Access-Control-Allow-Credentials", "true")
-                .header("Access-Control-Max-Age", "86400")
-                .build();
-    }
-
-    // ✅ Manejar OPTIONS general (preflight)
-    @OPTIONS
-    public Response options() {
-        return Response.ok()
-                .header("Access-Control-Allow-Origin", "*")
-                .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD")
-                .header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, Origin, X-Requested-With, Cache-Control")
-                .header("Access-Control-Allow-Credentials", "true")
-                .header("Access-Control-Max-Age", "86400")
-                .build();
-    }
-
-    // ✅ Manejar OPTIONS para DELETE /{id} (preflight)
-    @OPTIONS
-    @Path("/{id}")
-    public Response optionsDelete() {
-        return Response.ok()
-                .header("Access-Control-Allow-Origin", "*")
-                .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD")
-                .header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, Origin, X-Requested-With, Cache-Control")
-                .header("Access-Control-Allow-Credentials", "true")
-                .header("Access-Control-Max-Age", "86400")
-                .build();
-    }
-
-    // ✅ Manejar OPTIONS para /limpiar (preflight)
-    @OPTIONS
-    @Path("/limpiar")
-    public Response optionsLimpiar() {
-        return Response.ok()
-                .header("Access-Control-Allow-Origin", "*")
-                .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD")
-                .header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, Origin, X-Requested-With, Cache-Control")
-                .header("Access-Control-Allow-Credentials", "true")
-                .header("Access-Control-Max-Age", "86400")
-                .build();
-    }
-
-    // ✅ DELETE /{id} con CORS manual (reactivo)
     @DELETE
     @Path("/{id}")
     @WithTransaction
-    public Uni<Response> eliminarSismo(@PathParam("id") Long id) {
-        return Sismo.deleteById(id)
-                .onItem().transform(eliminado -> {
-                    if (eliminado) {
-                        return Response.ok()
-                                .header("Access-Control-Allow-Origin", "*")
-                                .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-                                .header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, Origin, X-Requested-With")
-                                .build();
-                    } else {
-                        return Response.status(Response.Status.NOT_FOUND)
-                                .header("Access-Control-Allow-Origin", "*")
-                                .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-                                .header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, Origin, X-Requested-With")
-                                .build();
-                    }
-                });
+    public Uni<Boolean> eliminarSismo(@PathParam("id") Long id) {
+        return Sismo.deleteById(id);
     }
 
-    // ✅ DELETE /limpiar (ELIMINA TODOS LOS SISMOS)
     @DELETE
     @Path("/limpiar")
     @WithTransaction
-    public Uni<Response> limpiarBaseDeDatos() {
-        return Sismo.deleteAll()
-                .onItem().transform(cantidad -> {
-                    return Response.noContent()
-                            .header("Access-Control-Allow-Origin", "*")
-                            .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-                            .header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, Origin, X-Requested-With")
-                            .build();
-                });
+    public Uni<Long> limpiarBaseDeDatos() {
+        return Sismo.deleteAll();
     }
 
-    // ✅ NUEVO: DELETE /limpiar/usuario/{usuarioId} (ELIMINA SOLO LOS SISMOS DE UN USUARIO)
     @DELETE
     @Path("/limpiar/usuario/{usuarioId}")
     @WithTransaction
-    public Uni<Response> limpiarSismosPorUsuario(@PathParam("usuarioId") String usuarioId) {
+    public Uni<Long> limpiarSismosPorUsuario(@PathParam("usuarioId") String usuarioId) {
         LOGGER.info("🗑️ Eliminando sismos del usuario: " + usuarioId);
-        return Sismo.delete("usuarioId = ?1", usuarioId)
-                .onItem().transform(cantidad -> {
-                    String mensaje = "Eliminados " + cantidad + " sismos del usuario " + usuarioId;
-                    LOGGER.info("✅ " + mensaje);
-                    return Response.ok(mensaje)
-                            .header("Access-Control-Allow-Origin", "*")
-                            .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-                            .header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, Origin, X-Requested-With")
-                            .build();
-                });
+        return Sismo.delete("usuarioId = ?1", usuarioId);
     }
 
-    // ✅ NUEVO: GET /api/sismos/usuario/{usuarioId} (OBTIENE SISMOS DE UN USUARIO)
     @GET
     @Path("/usuario/{usuarioId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Uni<Response> obtenerSismosPorUsuario(@PathParam("usuarioId") String usuarioId) {
+    public Uni<List<Sismo>> obtenerSismosPorUsuario(@PathParam("usuarioId") String usuarioId) {
         LOGGER.info("📊 Obteniendo sismos del usuario: " + usuarioId);
-        return Sismo.find("usuarioId = ?1", usuarioId)
-                .list()
-                .onItem().transform(sismos -> {
-                    return Response.ok(sismos)
-                            .header("Access-Control-Allow-Origin", "*")
-                            .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-                            .header("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept, Origin, X-Requested-With")
-                            .header("Access-Control-Expose-Headers", "Content-Type, Cache-Control")
-                            .build();
-                });
+        return Sismo.find("usuarioId = ?1", usuarioId).list();
     }
 }

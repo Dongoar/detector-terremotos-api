@@ -1,6 +1,7 @@
 package org.acme.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;  // ✅ AGREGAR IMPORT
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.operators.multi.processors.BroadcastProcessor;
 import org.acme.model.Sismo;
@@ -14,7 +15,8 @@ import java.util.logging.Logger;
 public class SismoEventBus {
 
     private static final Logger LOGGER = Logger.getLogger(SismoEventBus.class.getName());
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule());  // ✅ REGISTRAR EL MÓDULO
 
     private final BroadcastProcessor<Sismo> processor = BroadcastProcessor.create();
 
@@ -26,7 +28,6 @@ public class SismoEventBus {
         LOGGER.info("🔌 Iniciando SismoEventBus con suscriptor permanente...");
         processor.subscribe().with(
                 sismo -> {
-                    // ✅ Enviar sismo a WebSocket también
                     try {
                         String sismoJson = objectMapper.writeValueAsString(sismo);
                         webSocketResource.enviarSismo(sismoJson);

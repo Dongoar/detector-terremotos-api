@@ -31,7 +31,7 @@
     </dependencyManagement>
 
     <dependencies>
-        <!-- ✅ Core -->
+        <!-- Core -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-arc</artifactId>
@@ -41,7 +41,7 @@
             <artifactId>quarkus-rest</artifactId>
         </dependency>
 
-        <!-- ✅ Base de datos -->
+        <!-- Base de datos Reactive -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-hibernate-reactive-panache</artifactId>
@@ -51,7 +51,7 @@
             <artifactId>quarkus-reactive-pg-client</artifactId>
         </dependency>
 
-        <!-- ✅ REST Client -->
+        <!-- REST Client -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest-client-jackson</artifactId>
@@ -61,25 +61,37 @@
             <artifactId>quarkus-rest-jackson</artifactId>
         </dependency>
 
-        <!-- ✅ Scheduler -->
+        <!-- Scheduler -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-scheduler</artifactId>
         </dependency>
 
-        <!-- ✅ WebSocket -->
+        <!-- WebSocket -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-websockets</artifactId>
         </dependency>
 
-        <!-- ✅ Docker -->
+        <!-- Docker -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-container-image-docker</artifactId>
         </dependency>
 
-        <!-- ✅ Test -->
+        <!-- Health -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-smallrye-health</artifactId>
+        </dependency>
+
+        <!-- CORS -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-vertx-http</artifactId>
+        </dependency>
+
+        <!-- Test -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-junit</artifactId>
@@ -89,10 +101,6 @@
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-smallrye-health</artifactId>
         </dependency>
     </dependencies>
 

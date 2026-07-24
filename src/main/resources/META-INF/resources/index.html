@@ -14,7 +14,7 @@
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: #0a0a0f;
-            color: #e8e8e8;
+            color: #edf2f7;
             height: 100vh;
             overflow: hidden;
         }
@@ -35,6 +35,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
         }
 
         .logo-text {
@@ -219,6 +221,7 @@
             display: flex;
             align-items: center;
             gap: 4px;
+            white-space: nowrap;
         }
         .btn-glass:hover {
             background: rgba(255, 255, 255, 0.08);
@@ -288,27 +291,126 @@
             padding: 10px 14px 14px 14px;
         }
 
-        @media (max-width: 1024px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-                grid-template-rows: 1fr 1fr;
-                height: calc(100vh - 72px);
-                padding: 10px;
-                gap: 10px;
+        .marcador-sismo {
+            filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 3px rgba(255, 255, 255, 0.3));
+        }
+
+        .onda-sismica-epica {
+            pointer-events: none;
+            animation: onda-epica 3s ease-out infinite;
+            filter: drop-shadow(0 0 40px rgba(255, 50, 50, 0.9)) drop-shadow(0 0 80px rgba(255, 0, 0, 0.5));
+        }
+
+        .onda-sismica-epica.glow-active {
+            filter: drop-shadow(0 0 60px rgba(255, 0, 255, 1)) drop-shadow(0 0 120px rgba(255, 0, 255, 0.6)) drop-shadow(0 0 200px rgba(255, 0, 255, 0.3));
+        }
+
+        .onda-sismica-epica.glow-fade {
+            filter: drop-shadow(0 0 30px rgba(255, 100, 100, 0.6)) drop-shadow(0 0 60px rgba(255, 0, 0, 0.3));
+        }
+
+        @keyframes onda-epica {
+            0% { 
+                stroke-width: 8; 
+                opacity: 1; 
+                filter: drop-shadow(0 0 60px rgba(255, 0, 0, 1)) drop-shadow(0 0 120px rgba(255, 0, 0, 0.7)) drop-shadow(0 0 200px rgba(255, 0, 0, 0.4));
             }
+            50% { 
+                filter: drop-shadow(0 0 100px rgba(255, 0, 255, 0.9)) drop-shadow(0 0 200px rgba(255, 0, 255, 0.5)) drop-shadow(0 0 300px rgba(255, 0, 255, 0.3));
+            }
+            100% { 
+                stroke-width: 2; 
+                opacity: 0; 
+                filter: drop-shadow(0 0 0px rgba(255, 0, 0, 0));
+            }
+        }
+
+        .map-welcome {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 8px 18px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+            text-align: center;
+            font-weight: 500;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .voz-anuncio {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(16px);
+            padding: 12px 24px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+            text-align: center;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            max-width: 90%;
+        }
+
+        .voz-anuncio .pais {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .voz-anuncio .mensaje {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 4px 0;
+        }
+
+        .voz-anuncio .mensaje.critico {
+            color: #ef4444;
+            animation: pulse-text 1s infinite;
+        }
+
+        .voz-anuncio .detalle {
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+
+        @keyframes pulse-text {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .voz-anuncio .flag {
+            font-size: 1.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; height: calc(100vh - 72px); padding: 10px; gap: 10px; }
             .map-container { height: 100%; min-height: 200px; }
             .sidebar-container { height: 100%; min-height: 200px; }
             .glass-header { padding: 8px 14px; }
             .logo-text { font-size: 0.95rem; }
             .logo-badge { display: none; }
             .status-text { font-size: 0.6rem; }
+            .header-buttons { gap: 4px; }
+            .header-buttons .btn-glass { font-size: 0.55rem; padding: 4px 8px; }
+            .voz-anuncio .mensaje { font-size: 0.9rem; }
+            .voz-anuncio { padding: 8px 16px; bottom: 70px; }
         }
         @media (max-width: 480px) {
-            .main-grid {
-                padding: 6px;
-                gap: 6px;
-                height: calc(100vh - 60px);
-            }
+            .main-grid { padding: 6px; gap: 6px; height: calc(100vh - 60px); }
             .glass-header { padding: 6px 10px; }
             .logo-text { font-size: 0.75rem; gap: 4px; }
             .logo-text .icon { font-size: 0.9rem; }
@@ -320,42 +422,56 @@
             .btn-glass { font-size: 0.55rem; padding: 4px 8px; }
             .counter { font-size: 0.6rem; padding: 2px 6px; }
             .sidebar-scroll { padding: 6px 8px 8px 8px; }
+            .header-buttons .btn-glass { font-size: 0.5rem; padding: 3px 6px; }
+            .voz-anuncio .mensaje { font-size: 0.75rem; }
+            .voz-anuncio { padding: 6px 12px; bottom: 60px; }
         }
     </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <header class="glass-header">
     <div class="flex items-center gap-3">
         <div class="logo-text"><span class="icon">🚨</span>Sismógrafo Alerta</div>
         <span class="logo-badge">Centro de Monitoreo</span>
     </div>
-    <div class="flex items-center gap-3 md:gap-5">
+    <div class="flex items-center gap-3 md:gap-5 header-buttons flex-wrap">
         <a href="/estadisticas.html" class="btn-glass">📊 Análisis</a>
+        <button onclick="solicitarPermisoNotificaciones()" id="btn-notificaciones" class="btn-glass" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.15); color: #3b82f6;">
+            🔔 Notif.
+        </button>
+        <button onclick="probarNotificacion()" class="btn-glass" style="background: rgba(168, 85, 247, 0.1); border-color: rgba(168, 85, 247, 0.15); color: #a855f7; font-size: 0.55rem; padding: 4px 8px;">
+            📱 Probar
+        </button>
+        <button onclick="probarVoz()" class="btn-glass" style="background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.15); color: #22c55e; font-size: 0.55rem; padding: 4px 8px;">
+            🗣️ Voz
+        </button>
         <div class="status-text"><span class="status-pulse"></span>En Vivo</div>
         <span id="status-sse" class="text-[0.6rem] font-medium px-2 py-1 rounded-full border border-green-500/20 text-green-400 bg-green-500/5">🟢 Conectado</span>
-        <span id="sse-reconectando" class="hidden text-[0.6rem] font-medium px-2 py-1 rounded-full border border-orange-500/20 text-orange-400 bg-orange-500/5">🔄 Reconectando...</span>
+        <button onclick="toggleSonido()" id="btn-sonido" class="btn-glass" style="background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.15); color: #22c55e;">
+            🔊 Sonido
+        </button>
     </div>
 </header>
 
-<!-- MAIN CONTENT -->
 <div class="main-grid">
-    <!-- MAPA -->
     <div class="glass-card map-container">
         <div class="glass-card-header">
             <span>🌍 Geolocalización de Eventos</span>
             <span class="text-[0.55rem] font-normal text-slate-500">Región Global</span>
         </div>
         <div id="map" style="height: calc(100% - 40px); width: 100%;"></div>
+        <div class="map-welcome">
+            🌐 Haz clic en cualquier sismo para ver su ubicación
+        </div>
     </div>
 
-    <!-- SIDEBAR -->
     <div class="glass-card sidebar-container">
         <div class="glass-card-header">
             <span>📋 Historial de Registros</span>
             <div class="flex items-center gap-2">
                 <button onclick="limpiarPantalla()" class="btn-glass danger" title="Eliminar tu historial">🗑️</button>
+                <button onclick="recargarDatos()" class="btn-glass" title="Recargar datos">🔄</button>
                 <span class="counter"><span id="contador">0</span> sismos</span>
             </div>
         </div>
@@ -374,14 +490,25 @@
     </div>
 </div>
 
+<div id="vozBurbuja" class="voz-anuncio" style="display: none;">
+    <div class="flag" id="vozFlag">🌍</div>
+    <div class="pais" id="vozPais">SUDAMÉRICA</div>
+    <div class="mensaje" id="vozMensaje">Sismo detectado</div>
+    <div class="detalle" id="vozDetalle">Magnitud 5.2 · Hace 10 segundos</div>
+</div>
+
 <script>
     // ============================================================
     // ✅ CONFIGURACIÓN
     // ============================================================
     const IS_PROD = window.location.hostname !== "localhost";
-    const BACKEND_URL = IS_PROD ? "https://detector-terremotos-api-326103016260.us-central1.run.app" : "http://localhost:8083";
+    const BACKEND_URL = IS_PROD ? "https://toolbox-tires-simply-culture.trycloudflare.com" : "http://localhost:8083";
 
-    // ✅ OBTENER ID DE USUARIO (guardado en localStorage)
+    window.alertaTempranaActiva = false;
+    window.sonidoActivado = true;
+    window.ondasActivas = [];
+    let vozTimeout = null;
+
     function obtenerUsuarioId() {
         let usuarioId = localStorage.getItem('usuarioId');
         if (!usuarioId) {
@@ -398,10 +525,17 @@
     // ============================================================
     const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([-12.0463, -77.0427], 4);
     L.control.zoom({ position: 'bottomright' }).addTo(map);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: '&copy; Esri, Maxar, Earthstar Geographics',
+        maxZoom: 20,
+        minZoom: 2
+    }).addTo(map);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; OpenStreetMap &copy; CARTO',
-        minZoom: 2,
-        maxZoom: 18
+        maxZoom: 18,
+        minZoom: 2
     }).addTo(map);
 
     setTimeout(() => map.invalidateSize(), 100);
@@ -413,6 +547,7 @@
     // ============================================================
     let marcadores = {};
     const sonidoAlarma = new Audio('/alarma.mp3');
+    const sonidoNotificacion = new Audio('/alarma.mp3');
     let timeoutAudio = null;
     let todosLosSismos = [];
     let audioActivado = false;
@@ -422,15 +557,435 @@
     // ============================================================
     // ✅ FUNCIONES AUXILIARES
     // ============================================================
-    function obtenerInfoPais(lugar) {
+    function obtenerInfoPais(lugar, sismo) {
         if (!lugar) return { categoria: "otros", nombre: "Otros", emoji: "🌍", flag: "🏳️", color: "#64748b" };
         const lugarLower = lugar.toLowerCase();
-        if (lugarLower.includes("peru")) return { categoria: "peru", nombre: "Perú", emoji: "🇵🇪", flag: "🇵🇪", color: "#ef4444" };
-        if (lugarLower.includes("chile")) return { categoria: "chile", nombre: "Chile", emoji: "🇨🇱", flag: "🇨🇱", color: "#3b82f6" };
+        if (sismo && sismo.usgsId && (sismo.usgsId.startsWith("IGP_") || sismo.usgsId.startsWith("2026-"))) {
+            return { categoria: "peru", nombre: "Perú", emoji: "🇵🇪", flag: "🇵🇪", color: "#ef4444" };
+        }
+        if (lugarLower.includes("peru") || lugarLower.includes("arequipa") || lugarLower.includes("igp")) {
+            return { categoria: "peru", nombre: "Perú", emoji: "🇵🇪", flag: "🇵🇪", color: "#ef4444" };
+        }
+        if (lugarLower.includes("chile")) {
+            return { categoria: "chile", nombre: "Chile", emoji: "🇨🇱", flag: "🇨🇱", color: "#3b82f6" };
+        }
         return { categoria: "otros", nombre: "Otros", emoji: "🌍", flag: "🏳️", color: "#64748b" };
     }
-    function obtenerCategoriaPais(lugar) { return obtenerInfoPais(lugar).categoria; }
-    function obtenerColorPais(lugar) { return obtenerInfoPais(lugar).color; }
+
+    function obtenerCategoriaPais(lugar, sismo) {
+        return obtenerInfoPais(lugar, sismo).categoria;
+    }
+
+    function obtenerColorPais(lugar, sismo) {
+        return obtenerInfoPais(lugar, sismo).color;
+    }
+
+    // ============================================================
+    // ✅ SISTEMA DE VOZ INTELIGENTE
+    // ============================================================
+    const PAISES_VOZ = {
+        'perú': { flag: '🇵🇪', nombre: 'Perú', voz: 'peruano' },
+        'peru': { flag: '🇵🇪', nombre: 'Perú', voz: 'peruano' },
+        'chile': { flag: '🇨🇱', nombre: 'Chile', voz: 'chileno' },
+        'argentina': { flag: '🇦🇷', nombre: 'Argentina', voz: 'argentino' },
+        'bolivia': { flag: '🇧🇴', nombre: 'Bolivia', voz: 'boliviano' },
+        'ecuador': { flag: '🇪🇨', nombre: 'Ecuador', voz: 'ecuatoriano' },
+        'colombia': { flag: '🇨🇴', nombre: 'Colombia', voz: 'colombiano' },
+        'venezuela': { flag: '🇻🇪', nombre: 'Venezuela', voz: 'venezolano' },
+        'paraguay': { flag: '🇵🇾', nombre: 'Paraguay', voz: 'paraguayo' },
+        'uruguay': { flag: '🇺🇾', nombre: 'Uruguay', voz: 'uruguayo' },
+        'brasil': { flag: '🇧🇷', nombre: 'Brasil', voz: 'brasileño' },
+        'brazil': { flag: '🇧🇷', nombre: 'Brasil', voz: 'brasileño' },
+        'guyana': { flag: '🇬🇾', nombre: 'Guyana', voz: 'guyanés' },
+        'surinam': { flag: '🇸🇷', nombre: 'Surinam', voz: 'surinamés' },
+        'lima': { flag: '🇵🇪', nombre: 'Perú', voz: 'peruano' },
+        'arequipa': { flag: '🇵🇪', nombre: 'Perú', voz: 'peruano' },
+        'santiago': { flag: '🇨🇱', nombre: 'Chile', voz: 'chileno' },
+        'buenos aires': { flag: '🇦🇷', nombre: 'Argentina', voz: 'argentino' },
+        'la paz': { flag: '🇧🇴', nombre: 'Bolivia', voz: 'boliviano' },
+        'quito': { flag: '🇪🇨', nombre: 'Ecuador', voz: 'ecuatoriano' },
+        'bogota': { flag: '🇨🇴', nombre: 'Colombia', voz: 'colombiano' },
+        'caracas': { flag: '🇻🇪', nombre: 'Venezuela', voz: 'venezolano' },
+        'montevideo': { flag: '🇺🇾', nombre: 'Uruguay', voz: 'uruguayo' },
+        'asuncion': { flag: '🇵🇾', nombre: 'Paraguay', voz: 'paraguayo' }
+    };
+
+    function obtenerPaisVoz(lugar) {
+        if (!lugar) return { flag: '🌎', nombre: 'Sudamérica', voz: 'sudamericano' };
+        const lower = lugar.toLowerCase();
+        for (const [key, value] of Object.entries(PAISES_VOZ)) {
+            if (lower.includes(key)) {
+                return value;
+            }
+        }
+        return { flag: '🌎', nombre: 'Sudamérica', voz: 'sudamericano' };
+    }
+
+    function mostrarVozBurbuja(sismo) {
+        if (!sismo) return;
+        const infoPais = obtenerPaisVoz(sismo.lugar);
+        const magnitud = sismo.magnitud || 0;
+        const esCritico = magnitud >= 4.5;
+
+        const burbuja = document.getElementById('vozBurbuja');
+        const flag = document.getElementById('vozFlag');
+        const pais = document.getElementById('vozPais');
+        const mensaje = document.getElementById('vozMensaje');
+        const detalle = document.getElementById('vozDetalle');
+
+        flag.textContent = infoPais.flag || '🌎';
+        pais.textContent = infoPais.nombre.toUpperCase();
+        mensaje.textContent = `🚨 ${esCritico ? '¡ALERTA CRÍTICA!' : 'Sismo detectado'}`;
+        mensaje.className = `mensaje ${esCritico ? 'critico' : ''}`;
+        detalle.textContent = `Magnitud ${magnitud.toFixed(1)} · ${new Date(sismo.fechaHora).toLocaleString()}`;
+
+        burbuja.style.display = 'block';
+        burbuja.style.opacity = '0';
+        burbuja.style.transform = 'translateX(-50%) translateY(20px)';
+
+        setTimeout(() => {
+            burbuja.style.opacity = '1';
+            burbuja.style.transform = 'translateX(-50%) translateY(0)';
+        }, 50);
+
+        if (vozTimeout) clearTimeout(vozTimeout);
+        vozTimeout = setTimeout(() => {
+            burbuja.style.opacity = '0';
+            burbuja.style.transform = 'translateX(-50%) translateY(20px)';
+            setTimeout(() => {
+                burbuja.style.display = 'none';
+            }, 400);
+        }, 8000);
+    }
+
+    function hablarConVozInteligente(sismo) {
+        if (!sismo) return;
+        const infoPais = obtenerPaisVoz(sismo.lugar);
+        const magnitud = sismo.magnitud || 0;
+        const esCritico = magnitud >= 4.5;
+
+        mostrarVozBurbuja(sismo);
+
+        let mensajeVoz = '';
+        if (esCritico) {
+            mensajeVoz = `¡ALERTA DE EMERGENCIA! Sismo de magnitud ${magnitud.toFixed(1)} en ${infoPais.nombre}. Busque refugio inmediatamente.`;
+        } else if (magnitud >= 4.0) {
+            mensajeVoz = `Alerta sísmica en ${infoPais.nombre}. Magnitud ${magnitud.toFixed(1)}. Tome precauciones.`;
+        } else {
+            mensajeVoz = `Sismo detectado en ${infoPais.nombre}. Magnitud ${magnitud.toFixed(1)}.`;
+        }
+        hablar(mensajeVoz);
+    }
+
+    // ============================================================
+    // ✅ DETECCIÓN DE SUDAMÉRICA
+    // ============================================================
+    function esSudamerica(sismo) {
+        if (!sismo || !sismo.lugar) return false;
+
+        const lugar = sismo.lugar.toLowerCase();
+        const pais = sismo.pais || '';
+        const paisLower = pais.toLowerCase();
+
+        const sudamerica = [
+            'peru', 'perú', 'chile', 'argentina', 'bolivia', 'ecuador',
+            'colombia', 'venezuela', 'paraguay', 'uruguay', 'brasil', 'brazil',
+            'guyana', 'surinam', 'suriname', 'guayana francesa', 'french guiana',
+            'lima', 'arequipa', 'santiago', 'buenos aires', 'la paz', 'quito',
+            'bogota', 'caracas', 'montevideo', 'brasilia', 'asuncion',
+            'pe', 'cl', 'ar', 'bo', 'ec', 'co', 've', 'py', 'uy', 'br', 'gy', 'sr', 'gf'
+        ];
+
+        for (const nombre of sudamerica) {
+            if (lugar.includes(nombre) || paisLower.includes(nombre)) {
+                return true;
+            }
+        }
+
+        if (sismo.latitud !== undefined && sismo.longitud !== undefined) {
+            const lat = sismo.latitud;
+            const lng = sismo.longitud;
+            if (lat >= -60 && lat <= 15 && lng >= -85 && lng <= -30) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // ============================================================
+    // ✅ NOTIFICACIONES PUSH
+    // ============================================================
+    function solicitarPermisoNotificaciones() {
+        if (!("Notification" in window)) {
+            console.log('⚠️ Este navegador no soporta notificaciones');
+            alert('❌ Tu navegador no soporta notificaciones. Usa Chrome, Firefox o Edge.');
+            return;
+        }
+
+        if (Notification.permission === "granted") {
+            console.log('✅ Permiso de notificaciones ya concedido');
+            actualizarEstadoNotificaciones();
+            new Notification("🔔 Sismógrafo Alerta Centro", {
+                body: "Notificaciones activadas para sismos en Sudamérica. Recibirás alertas en tiempo real.",
+                icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23ef4444'/%3E%3Ctext x='50' y='68' font-size='50' text-anchor='middle' fill='white' font-family='sans-serif'%3E🚨%3C/text%3E%3C/svg%3E",
+                tag: "bienvenida",
+                requireInteraction: false
+            });
+            return;
+        }
+
+        if (Notification.permission === "denied") {
+            console.log('❌ Permiso de notificaciones denegado');
+            alert('⚠️ Permiso de notificaciones denegado. Actívalo desde la configuración de tu navegador.');
+            actualizarEstadoNotificaciones();
+            return;
+        }
+
+        Notification.requestPermission().then(permiso => {
+            if (permiso === "granted") {
+                console.log('✅ Permiso de notificaciones concedido');
+                actualizarEstadoNotificaciones();
+                new Notification("🔔 Sismógrafo Alerta Centro", {
+                    body: "¡Notificaciones activadas! Recibirás alertas de sismos en Sudamérica.",
+                    icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23ef4444'/%3E%3Ctext x='50' y='68' font-size='50' text-anchor='middle' fill='white' font-family='sans-serif'%3E🚨%3C/text%3E%3C/svg%3E",
+                    tag: "bienvenida",
+                    requireInteraction: false
+                });
+            } else {
+                console.log('❌ Permiso de notificaciones denegado');
+                actualizarEstadoNotificaciones();
+            }
+        });
+    }
+
+    function enviarNotificacionSismo(sismo) {
+        if (!esSudamerica(sismo)) {
+            console.log(`🌍 Sismo fuera de Sudamérica (${sismo.lugar}) - Sin notificación`);
+            return;
+        }
+
+        if (!("Notification" in window)) return;
+        if (Notification.permission !== "granted") return;
+
+        const magnitud = sismo.magnitud || 0;
+        const lugar = sismo.lugar || "Ubicación desconocida";
+        const infoPais = obtenerPaisVoz(lugar);
+        const esCritico = magnitud >= 4.5;
+
+        try {
+            sonidoNotificacion.currentTime = 0;
+            sonidoNotificacion.volume = 0.9;
+            const promesaSonido = sonidoNotificacion.play();
+            if (promesaSonido !== undefined) {
+                promesaSonido.catch(() => {
+                    document.addEventListener('click', function playSoundOnClick() {
+                        sonidoNotificacion.play().catch(() => {});
+                        document.removeEventListener('click', playSoundOnClick);
+                    }, { once: true });
+                });
+            }
+        } catch (e) {}
+
+        const titulo = esCritico
+            ? `🚨 ¡ALERTA SÍSMICA! M${magnitud.toFixed(1)} - ${infoPais.nombre}`
+            : `📍 Sismo en ${infoPais.nombre} - M${magnitud.toFixed(1)}`;
+
+        const cuerpo = `📍 ${lugar}\n📊 Magnitud: ${magnitud.toFixed(1)}\n⏱️ ${new Date(sismo.fechaHora).toLocaleString()}\n🌎 Región: Sudamérica`;
+
+        try {
+            const notificacion = new Notification(titulo, {
+                body: cuerpo,
+                icon: esCritico
+                    ? "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23ef4444'/%3E%3Ctext x='50' y='68' font-size='50' text-anchor='middle' fill='white' font-family='sans-serif'%3E🚨%3C/text%3E%3C/svg%3E"
+                    : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23f59e0b'/%3E%3Ctext x='50' y='68' font-size='50' text-anchor='middle' fill='white' font-family='sans-serif'%3E🌎%3C/text%3E%3C/svg%3E",
+                tag: `sismo-${sismo.id}`,
+                requireInteraction: esCritico,
+                silent: false,
+                vibrate: esCritico ? [200, 100, 200, 100, 200] : [100, 50, 100]
+            });
+
+            notificacion.onclick = function() {
+                window.focus();
+                if (sismo.latitud && sismo.longitud) {
+                    map.flyTo([sismo.latitud, sismo.longitud], 8, { duration: 1.5 });
+                }
+                this.close();
+            };
+
+            console.log(`📱 [Sudamérica] Notificación enviada: ${titulo}`);
+
+        } catch (error) {
+            console.error('❌ Error al enviar notificación:', error);
+        }
+    }
+
+    function probarNotificacion() {
+        if (!("Notification" in window)) {
+            alert('❌ Tu navegador no soporta notificaciones.');
+            return;
+        }
+
+        if (Notification.permission !== "granted") {
+            alert('⚠️ Primero activa las notificaciones con el botón "🔔 Notif."');
+            return;
+        }
+
+        const sismoPrueba = {
+            id: Date.now(),
+            magnitud: 4.7,
+            lugar: "🧪 PRUEBA - Lima, Perú",
+            pais: "Perú",
+            fechaHora: new Date().toISOString(),
+            latitud: -12.0463,
+            longitud: -77.0427,
+            alertaCritica: true
+        };
+
+        try {
+            sonidoNotificacion.currentTime = 0;
+            sonidoNotificacion.volume = 0.9;
+            sonidoNotificacion.play().catch(() => {});
+        } catch (e) {}
+
+        enviarNotificacionSismo(sismoPrueba);
+        hablarConVozInteligente(sismoPrueba);
+        alert('✅ Notificación y voz de prueba enviada (Simulando sismo en Perú M4.7)');
+    }
+
+    function probarVoz() {
+        const sismoPrueba = {
+            id: Date.now(),
+            magnitud: 4.7,
+            lugar: "🧪 PRUEBA - Lima, Perú",
+            pais: "Perú",
+            fechaHora: new Date().toISOString(),
+            latitud: -12.0463,
+            longitud: -77.0427,
+            alertaCritica: true
+        };
+        hablarConVozInteligente(sismoPrueba);
+    }
+
+    function actualizarEstadoNotificaciones() {
+        const btn = document.getElementById('btn-notificaciones');
+        if (!btn) return;
+
+        if (!("Notification" in window)) {
+            btn.textContent = '⚠️ No soportado';
+            btn.style.color = '#ef4444';
+            btn.style.borderColor = 'rgba(239,68,68,0.2)';
+            btn.style.background = 'rgba(239,68,68,0.1)';
+            return;
+        }
+
+        switch(Notification.permission) {
+            case "granted":
+                btn.textContent = '🔔 Activado';
+                btn.style.color = '#22c55e';
+                btn.style.borderColor = 'rgba(34,197,94,0.15)';
+                btn.style.background = 'rgba(34,197,94,0.1)';
+                break;
+            case "denied":
+                btn.textContent = '🔕 Bloqueado';
+                btn.style.color = '#ef4444';
+                btn.style.borderColor = 'rgba(239,68,68,0.2)';
+                btn.style.background = 'rgba(239,68,68,0.1)';
+                break;
+            default:
+                btn.textContent = '🔔 Activar';
+                btn.style.color = '#3b82f6';
+                btn.style.borderColor = 'rgba(59,130,246,0.15)';
+                btn.style.background = 'rgba(59,130,246,0.1)';
+        }
+    }
+
+    // ============================================================
+    // ✅ ONDAS EXPANSIVAS
+    // ============================================================
+    function crearOndasExpansivas(lat, lng, magnitud, color) {
+        const colores = { 
+            baja: '#ff6b35', 
+            media: '#ff0040', 
+            alta: '#ff00ff', 
+            critica: '#00ffff',
+            peru: '#ff3333',
+            chile: '#3399ff'
+        };
+
+        let colorPrincipal;
+        if (magnitud >= 7) colorPrincipal = colores.critica;
+        else if (magnitud >= 5) colorPrincipal = colores.alta;
+        else if (magnitud >= 4) colorPrincipal = colores.media;
+        else colorPrincipal = colores.baja;
+
+        const colorFinal = color || colorPrincipal;
+        const radioBase = 8000 + (magnitud * 10000);
+        const tiempoAnimacion = 2500 + (magnitud * 500);
+        const strokeWidth = 5 + (magnitud / 2);
+        const capas = Math.min(5 + Math.floor(magnitud / 1.5), 8);
+
+        const ondasCreadas = [];
+
+        for (let i = 0; i < capas; i++) {
+            const delay = i * (tiempoAnimacion / capas);
+
+            const circle = L.circle([lat, lng], {
+                radius: 50,
+                color: colorFinal,
+                weight: strokeWidth,
+                opacity: 1.0,
+                fillOpacity: 0,
+                className: 'onda-sismica-epica',
+                stroke: true
+            }).addTo(map);
+
+            ondasCreadas.push(circle);
+            window.ondasActivas.push(circle);
+
+            let radius = 50;
+            let opacity = 1.0;
+            const maxRadius = radioBase * (1 + (i * 0.2));
+            const pasos = 50;
+
+            setTimeout(() => {
+                const interval = setInterval(() => {
+                    radius += (maxRadius - 50) / pasos;
+                    opacity -= 0.98 / pasos;
+
+                    if (radius >= maxRadius || opacity <= 0.02) {
+                        clearInterval(interval);
+                        if (map.hasLayer(circle)) {
+                            map.removeLayer(circle);
+                        }
+                        const index = window.ondasActivas.indexOf(circle);
+                        if (index > -1) {
+                            window.ondasActivas.splice(index, 1);
+                        }
+                        return;
+                    }
+
+                    circle.setRadius(radius);
+                    circle.setStyle({
+                        opacity: opacity,
+                        weight: strokeWidth * (opacity + 0.5),
+                        color: colorFinal,
+                        className: `onda-sismica-epica ${opacity > 0.6 ? 'glow-active' : 'glow-fade'}`
+                    });
+                }, tiempoAnimacion / pasos);
+            }, delay);
+        }
+
+        const tiempoMaximo = tiempoAnimacion + 2000;
+        setTimeout(() => {
+            window.ondasActivas.forEach(circle => {
+                if (map.hasLayer(circle)) {
+                    map.removeLayer(circle);
+                }
+            });
+            window.ondasActivas = [];
+            console.log('🧹 Ondas eliminadas (timeout de seguridad)');
+        }, tiempoMaximo);
+    }
 
     // ============================================================
     // ✅ TTS (Text-to-Speech)
@@ -438,6 +993,7 @@
     function hablar(texto) {
         if (!window.speechSynthesis) return;
         window.speechSynthesis.cancel();
+
         let voces = window.speechSynthesis.getVoices();
         if (voces.length === 0) {
             window.speechSynthesis.onvoiceschanged = () => {
@@ -451,36 +1007,21 @@
             hablarConVoz(texto, voces);
         }
     }
+
     function hablarConVoz(texto, voces) {
         try {
             const utterance = new SpeechSynthesisUtterance(texto);
             utterance.lang = 'es-ES';
-            utterance.rate = 0.9;
+            utterance.rate = 0.85;
             utterance.pitch = 1.0;
             utterance.volume = 1.0;
+
             const vozEspanol = voces.find(v => v.lang.startsWith('es'));
             if (vozEspanol) utterance.voice = vozEspanol;
-            window.speechSynthesis.speak(utterance);
-        } catch (error) { console.error('❌ Error TTS:', error); }
-    }
 
-    // ============================================================
-    // ✅ ALERTA VISUAL
-    // ============================================================
-    function mostrarAlertaEspecial(sismo, paisNombre, paisEmoji) {
-        const alertaDiv = document.createElement('div');
-        alertaDiv.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 z-[9999] bg-gradient-to-r from-red-600 to-red-700 text-white px-8 py-5 rounded-2xl shadow-2xl border-2 border-yellow-400/50 animate-bounce';
-        alertaDiv.innerHTML = `
-            <div class="text-center">
-                <div class="text-5xl animate-pulse">🔴</div>
-                <div class="text-3xl font-extrabold mt-1">${paisEmoji} ¡${paisNombre}!</div>
-                <div class="text-2xl font-bold mt-1">Magnitud ${sismo.magnitud.toFixed(1)}</div>
-                <div class="text-sm mt-2 max-w-xs opacity-90">${sismo.lugar}</div>
-                <button onclick="this.parentElement.parentElement.remove()" class="mt-4 bg-white/20 hover:bg-white/30 text-white px-5 py-1.5 rounded-full text-sm font-semibold transition-all">Cerrar</button>
-            </div>
-        `;
-        document.body.appendChild(alertaDiv);
-        setTimeout(() => { if (alertaDiv.parentElement) alertaDiv.remove(); }, 15000);
+            window.speechSynthesis.speak(utterance);
+            console.log('🗣️ Voz:', texto);
+        } catch (error) { console.error('❌ Error TTS:', error); }
     }
 
     // ============================================================
@@ -500,6 +1041,7 @@
             }
         } catch (e) { activarConSonidoSilencio(); }
     }
+
     function activarConSonidoSilencio() {
         try {
             const audioSilencio = new Audio('data:audio/wav;base64,UklGRnoAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoAAACBhYqFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYaFhYWA==');
@@ -511,7 +1053,9 @@
             }).catch(() => {});
         } catch (e) {}
     }
+
     function probarAlarmaReal() {
+        if (!window.sonidoActivado) return;
         sonidoAlarma.load();
         sonidoAlarma.play().then(() => {
             sonidoAlarma.pause();
@@ -521,27 +1065,46 @@
     }
 
     function reproducirAlertaDinamica(sismo) {
+        if (!window.sonidoActivado) {
+            console.log('🔇 Sonido desactivado');
+            return;
+        }
         if (!audioActivado) { activarAudioAutomatico(); return; }
         if (timeoutAudio) clearTimeout(timeoutAudio);
         sonidoAlarma.pause();
         sonidoAlarma.currentTime = 0;
-        sonidoAlarma.play().catch(() => {});
 
-        const infoPais = obtenerInfoPais(sismo.lugar);
-        let mensajeVoz = '';
-        if (infoPais.categoria === 'peru') {
-            mensajeVoz = `Alerta sísmica en Perú. Magnitud ${sismo.magnitud.toFixed(1)}.`;
-            mostrarAlertaEspecial(sismo, 'PERÚ', '🇵🇪');
-        } else if (infoPais.categoria === 'chile') {
-            mensajeVoz = `Alerta sísmica en Chile. Magnitud ${sismo.magnitud.toFixed(1)}.`;
-            mostrarAlertaEspecial(sismo, 'CHILE', '🇨🇱');
-        } else if (sismo.alertaCritica) {
-            mensajeVoz = `Alerta sísmica crítica. Magnitud ${sismo.magnitud.toFixed(1)}.`;
-        } else {
-            mensajeVoz = `Sismo detectado. Magnitud ${sismo.magnitud.toFixed(1)}.`;
-        }
-        setTimeout(() => hablar(mensajeVoz), 1000);
+        sonidoAlarma.play().catch(() => {
+            console.log('⚠️ No se pudo reproducir la alarma automáticamente');
+            document.addEventListener('click', function playOnClick() {
+                sonidoAlarma.play();
+                document.removeEventListener('click', playOnClick);
+            }, { once: true });
+        });
+
+        hablarConVozInteligente(sismo);
         timeoutAudio = setTimeout(() => { sonidoAlarma.pause(); }, sismo.alertaCritica ? 30000 : 15000);
+    }
+
+    function toggleSonido() {
+        window.sonidoActivado = !window.sonidoActivado;
+        const btn = document.getElementById('btn-sonido');
+        if (window.sonidoActivado) {
+            btn.innerHTML = '🔊 Sonido';
+            btn.style.color = '#22c55e';
+            btn.style.borderColor = 'rgba(34, 197, 94, 0.15)';
+            btn.style.background = 'rgba(34, 197, 94, 0.1)';
+            sonidoAlarma.load();
+            console.log('🔊 Sonido activado');
+        } else {
+            btn.innerHTML = '🔇 Silencio';
+            btn.style.color = '#ef4444';
+            btn.style.borderColor = 'rgba(239, 68, 68, 0.15)';
+            btn.style.background = 'rgba(239, 68, 68, 0.1)';
+            sonidoAlarma.pause();
+            sonidoAlarma.currentTime = 0;
+            console.log('🔇 Sonido desactivado');
+        }
     }
 
     // ============================================================
@@ -553,51 +1116,73 @@
         lista.innerHTML = '';
         Object.values(marcadores).forEach(m => map.removeLayer(m));
         marcadores = {};
-        const sismosFiltrados = todosLosSismos.filter(s => filtro === "todos" || obtenerCategoriaPais(s.lugar) === filtro);
+
+        const sismosFiltrados = todosLosSismos.filter(s => filtro === "todos" || obtenerCategoriaPais(s.lugar, s) === filtro);
         document.getElementById('contador').innerText = sismosFiltrados.length;
+
         if (sismosFiltrados.length === 0) {
             lista.innerHTML = '<div class="text-center text-slate-500 text-sm py-8">📭 No hay sismos registrados</div>';
             return;
         }
+
+        const ahora = Date.now();
+
         sismosFiltrados.forEach(sismo => {
-            const infoPais = obtenerInfoPais(sismo.lugar);
+            const infoPais = obtenerInfoPais(sismo.lugar, sismo);
             const div = document.createElement('div');
             div.className = `sismo-item ${sismo.alertaCritica ? 'critico' : ''}`;
             const badge = infoPais.categoria !== 'otros' ?
                 `<span class="sismo-badge ${infoPais.categoria}">${infoPais.flag} ${infoPais.nombre}</span>` : '';
             div.innerHTML = `
-                <div class="flex justify-between items-start">
-                    <div class="flex flex-col gap-0.5 flex-1 min-w-0">
-                        <div class="flex items-center gap-2">
-                            <span class="sismo-magnitud ${sismo.alertaCritica ? 'critico' : ''}">M ${sismo.magnitud.toFixed(1)}</span>
-                            ${badge}
-                        </div>
-                        <div class="sismo-lugar">${sismo.lugar}</div>
-                        <div class="sismo-fecha">${new Date(sismo.fechaHora).toLocaleString()}</div>
+            <div class="flex justify-between items-start">
+                <div class="flex flex-col gap-0.5 flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                        <span class="sismo-magnitud ${sismo.alertaCritica ? 'critico' : ''}">M ${sismo.magnitud.toFixed(1)}</span>
+                        ${badge}
                     </div>
-                    <button onclick="eliminarSismoIndividual(${sismo.id}, event)" class="btn-eliminar ml-2 flex-shrink-0" title="Eliminar">×</button>
+                    <div class="sismo-lugar">${sismo.lugar}</div>
+                    <div class="sismo-fecha">${new Date(sismo.fechaHora).toLocaleString()}</div>
                 </div>
-            `;
+                <button onclick="eliminarSismoIndividual(${sismo.id}, event)" class="btn-eliminar ml-2 flex-shrink-0" title="Eliminar">×</button>
+            </div>
+        `;
             div.onclick = () => map.setView([sismo.latitud, sismo.longitud], 7);
             lista.appendChild(div);
+
             const marker = L.circleMarker([sismo.latitud, sismo.longitud], {
-                radius: sismo.alertaCritica ? 8 : 5,
-                fillColor: obtenerColorPais(sismo.lugar),
-                color: '#fff',
-                weight: 0.8,
-                fillOpacity: 0.85
+                radius: sismo.alertaCritica ? 10 : 7,
+                fillColor: obtenerColorPais(sismo.lugar, sismo),
+                color: '#ffffff',
+                weight: 2.5,
+                opacity: 1,
+                fillOpacity: 0.9,
+                className: 'marcador-sismo'
             }).addTo(map);
             marcadores[sismo.id] = marker;
+
+            const fechaSismo = new Date(sismo.fechaHora).getTime();
+            const diferencia = (ahora - fechaSismo) / 1000;
+            if (diferencia < 300) {
+                const color = obtenerColorPais(sismo.lugar, sismo);
+                crearOndasExpansivas(sismo.latitud, sismo.longitud, sismo.magnitud, color);
+            }
         });
         setTimeout(() => map.invalidateSize(), 100);
     }
 
+    function recargarDatos() {
+        console.log('🔄 Recargando datos...');
+        cargarSismos();
+    }
+
     // ============================================================
-    // ✅ CARGAR SISMOS DESDE LA API (CORREGIDO - MUESTRA TODOS)
+    // ✅ CARGAR SISMOS - VERSIÓN CORREGIDA
     // ============================================================
     async function cargarSismos() {
         try {
-            const response = await fetch(`${BACKEND_URL}/api/sismos`);
+            const response = await fetch(`${BACKEND_URL}/api/sismos`, {
+                headers: { 'ngrok-skip-browser-warning': 'true' }
+            });
             if (response.status === 204) {
                 todosLosSismos = [];
                 filtrarYRenderizar();
@@ -606,11 +1191,11 @@
             }
             const sismos = await response.json();
 
-            // ✅ CORREGIDO: Mostrar TODOS los sismos (sin filtrar por usuario)
+            sismos.sort((a, b) => new Date(b.fechaHora) - new Date(a.fechaHora));
+
             const sismosUsuario = sismos;
 
             if (sismosUsuario && sismosUsuario.length > 0) {
-                // ✅ Si es la primera carga, solo mostrar sin alertas
                 if (primeraCarga) {
                     todosLosSismos = sismosUsuario;
                     filtrarYRenderizar();
@@ -618,20 +1203,101 @@
                     console.log('📋 Primera carga:', sismosUsuario.length, 'sismos cargados');
                     return;
                 }
-
-                // ✅ Buscar nuevos sismos comparando IDs
                 const idsAnteriores = new Set(todosLosSismos.map(s => s.id));
                 const nuevosSismos = sismosUsuario.filter(s => !idsAnteriores.has(s.id));
 
                 if (nuevosSismos.length > 0) {
-                    // ✅ Tomar el más reciente de los nuevos (mayor ID)
                     const ultimoNuevo = nuevosSismos.reduce((a, b) => a.id > b.id ? a : b);
                     todosLosSismos = sismosUsuario;
                     filtrarYRenderizar();
-                    reproducirAlertaDinamica(ultimoNuevo);
-                    console.log('✅ Nuevo sismo detectado:', ultimoNuevo.lugar, 'M' + ultimoNuevo.magnitud);
+
+                    // ✅ PROCESAR CADA NUEVO SISMO
+                    nuevosSismos.forEach(sismo => {
+                        const esSudamericano = esSudamerica(sismo);
+                        const lugarLower = sismo.lugar ? sismo.lugar.toLowerCase() : '';
+                        
+                        const esPeru = lugarLower.includes('peru') || lugarLower.includes('perú') || 
+                                       sismo.usgsId?.startsWith('IGP_') || sismo.usgsId?.startsWith('2026-');
+                        const esChile = lugarLower.includes('chile');
+                        const magnitud = sismo.magnitud || 0;
+
+                        let debeNotificar = false;
+
+                        if (esSudamericano) {
+                            if (esPeru || esChile) {
+                                if (magnitud >= 3.5) {
+                                    debeNotificar = true;
+                                }
+                            } else {
+                                if (magnitud >= 4.0) {
+                                    debeNotificar = true;
+                                }
+                            }
+                        }
+
+                        if (debeNotificar) {
+                            console.log(`📍 [Sudamérica] Notificando: ${sismo.lugar} M${magnitud.toFixed(1)}`);
+                            enviarNotificacionSismo(sismo);
+                            hablarConVozInteligente(sismo);
+                        } else if (esSudamericano && magnitud >= 3.5) {
+                            console.log(`🌍 [Sudamérica - Sin notificación] ${sismo.lugar} M${magnitud.toFixed(1)} (umbral no alcanzado)`);
+                        } else if (!esSudamericano && magnitud >= 4.0) {
+                            console.log(`🌍 [Fuera de Sudamérica] ${sismo.lugar} M${magnitud.toFixed(1)} - Sin notificación`);
+                        }
+                    });
+
+                    // ✅ ALERTA TEMPRANA - TODA SUDAMÉRICA DESDE M4.5 CON SONIDO
+                    const lugar = ultimoNuevo.lugar || '';
+                    const lugarLower = lugar.toLowerCase();
+                    const esPeru = lugarLower.includes('peru') || lugarLower.includes('perú') || 
+                                   ultimoNuevo.usgsId?.startsWith('IGP_') || ultimoNuevo.usgsId?.startsWith('2026-');
+                    const esChile = lugarLower.includes('chile');
+                    const magnitud = ultimoNuevo.magnitud || 0;
+                    const esSudamericano = esSudamerica(ultimoNuevo);
+
+                    let debeAlertar = false;
+                    let razonAlerta = '';
+
+                    if (esSudamericano && magnitud >= 4.5) {
+                        debeAlertar = true;
+                        if (esPeru) razonAlerta = `Perú - M${magnitud.toFixed(1)}`;
+                        else if (esChile) razonAlerta = `Chile - M${magnitud.toFixed(1)}`;
+                        else razonAlerta = `Sudamérica - M${magnitud.toFixed(1)}`;
+                    }
+
+                    if (debeAlertar) {
+                        console.log(`🚨 ¡ALERTA TEMPRANA! ${razonAlerta} - ${ultimoNuevo.lugar}`);
+                        
+                        // 🔥 SONIDO DE ALARMA
+                        if (sonidoAlarma && window.sonidoActivado) {
+                            sonidoAlarma.currentTime = 0;
+                            sonidoAlarma.play().catch(() => {
+                                console.log('⚠️ No se pudo reproducir la alarma automáticamente');
+                                document.addEventListener('click', function playOnClick() {
+                                    sonidoAlarma.play();
+                                    document.removeEventListener('click', playOnClick);
+                                }, { once: true });
+                            });
+                        }
+                        
+                        // 🔥 VOZ DE ALERTA TEMPRANA
+                        const infoPais = obtenerPaisVoz(ultimoNuevo.lugar);
+                        const mensajeVoz = `¡ALERTA DE EMERGENCIA! Sismo de magnitud ${magnitud.toFixed(1)} en ${infoPais.nombre}. Busque refugio inmediatamente.`;
+                        hablar(mensajeVoz);
+                        
+                        // 🔥 ALERTA VISUAL
+                        mostrarAlertaTemprana(ultimoNuevo);
+                        
+                        // 🔥 BURBUJA DE VOZ
+                        mostrarVozBurbuja(ultimoNuevo);
+                    } else {
+                        if (magnitud >= 4.5 && !esSudamericano) {
+                            console.log(`⚠️ Sismo fuera de Sudamérica: ${ultimoNuevo.lugar} M${magnitud} - Sin alerta temprana`);
+                        } else {
+                            console.log(`✅ Nuevo sismo detectado: ${ultimoNuevo.lugar} M${magnitud}`);
+                        }
+                    }
                 } else {
-                    // ✅ No hay nuevos sismos, solo actualizar la lista
                     todosLosSismos = sismosUsuario;
                     filtrarYRenderizar();
                 }
@@ -646,7 +1312,7 @@
     }
 
     // ============================================================
-    // ✅ POLLING (CONSULTA PERIÓDICA CADA 3 SEGUNDOS)
+    // ✅ POLLING
     // ============================================================
     function iniciarPolling() {
         if (pollingInterval) {
@@ -657,7 +1323,7 @@
     }
 
     // ============================================================
-    // ✅ FUNCIONES DE ELIMINACIÓN Y LIMPIEZA
+    // ✅ FUNCIONES DE ELIMINACIÓN
     // ============================================================
     async function eliminarSismoIndividual(id, evento) {
         evento.stopPropagation();
@@ -668,15 +1334,12 @@
         } catch (error) { alert('❌ Error de conexión'); }
     }
 
-    // ✅ LIMPIAR SOLO EL HISTORIAL DEL USUARIO ACTUAL
     async function limpiarPantalla() {
         if (!confirm('⚠️ ¿Eliminar TODOS tus sismos registrados?')) return;
-
         try {
             const response = await fetch(`${BACKEND_URL}/api/sismos/limpiar/usuario/${USUARIO_ID}`, {
                 method: 'DELETE'
             });
-
             if (response.ok) {
                 todosLosSismos = [];
                 filtrarYRenderizar();
@@ -710,12 +1373,57 @@
     }
 
     // ============================================================
+    // ✅ ALERTA TEMPRANA
+    // ============================================================
+    function mostrarAlertaTemprana(sismo) {
+        if (sonidoAlarma && window.sonidoActivado) {
+            sonidoAlarma.currentTime = 0;
+            sonidoAlarma.play().catch(() => {
+                console.log('⚠️ No se pudo reproducir la alarma automáticamente');
+            });
+        }
+
+        const alertaDiv = document.createElement('div');
+        alertaDiv.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 z-[9999] bg-gradient-to-r from-red-600 to-red-700 text-white px-8 py-5 rounded-2xl shadow-2xl border-4 border-yellow-400 animate-pulse';
+        alertaDiv.innerHTML = `
+        <div class="text-center">
+            <div class="text-6xl animate-bounce">🚨🚨</div>
+            <div class="text-3xl font-extrabold mt-2">¡ALERTA TEMPRANA!</div>
+            <div class="text-xl font-bold mt-1">🔴 Posible sismo en curso</div>
+            <div class="text-lg mt-2">
+                📍 <b>${sismo.lugar}</b><br>
+                📊 <b>Magnitud ${sismo.magnitud.toFixed(1)}</b><br>
+                ⏱️ <b>Detección en segundos</b>
+            </div>
+            <div class="text-sm mt-3 text-yellow-200 font-semibold">
+                ⚠️ Busca refugio inmediatamente
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()"
+                    class="mt-4 bg-white/20 hover:bg-white/30 text-white px-5 py-1.5 rounded-full text-sm font-semibold transition-all">
+                Cerrar
+            </button>
+        </div>
+    `;
+        document.body.appendChild(alertaDiv);
+
+        setTimeout(() => {
+            if (alertaDiv.parentElement) alertaDiv.remove();
+        }, 30000);
+    }
+
+    // ============================================================
     // ✅ INICIALIZACIÓN
     // ============================================================
     cargarSismos();
     iniciarPolling();
     sonidoAlarma.load();
+    sonidoNotificacion.load();
     setTimeout(activarAudioAutomatico, 500);
+
+    setTimeout(() => {
+        solicitarPermisoNotificaciones();
+        actualizarEstadoNotificaciones();
+    }, 2000);
 
     if (window.speechSynthesis) {
         const voces = window.speechSynthesis.getVoices();
@@ -728,6 +1436,10 @@
 
     console.log('📋 Dashboard cargado correctamente (modo polling)');
     console.log('🆔 Tu ID de usuario:', USUARIO_ID);
+    console.log('🔔 Notificaciones: Solo para sismos en Sudamérica');
+    console.log('🗣️ Sistema de voz inteligente activado');
+    console.log('🔊 Sonido de notificaciones: usa alarma.mp3');
+    console.log('🚨 ALERTAS TEMPRANAS: TODA SUDAMÉRICA desde M4.5 con SONIDO');
 </script>
 </body>
 </html>
